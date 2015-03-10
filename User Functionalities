@@ -1,0 +1,55 @@
+Stuff our website should allow us to do	
+	
+Login	
+Register	
+Ask Questions (provide form with send btn)	
+	
+Play Music	
+	Comment on Music, autogenerate links from time signs in comments to start playing song at that particular time
+	
+	
+	
+Rate Music	
+Tag Music (hashtags)	
+	
+Download Muisc (different file extensions)	
+Upload Music -> give suggestions if musics already in the database	
+	> enter meta data automatically (extract from music file)
+	
+Comment on stuff!	
+	Like Songs, User Profiles, Playlists, whatever else we come up with
+Delete Comments or at least make them disappear from timeline and report to admin	
+Rate comments? Like +1 | 0	
+	
+Edit Profile Details	
+	Username, Password, Date of Birth, Profile Picture
+	whatever other details you may want the world to see
+	Change Settings (e.g. whether other people can follow you, can find you in search, can comment on your profile, edit your blacklist)
+	Change Settings again (e.g. themes or custom colours for stuff i.e. all my hashtags will be PURPLE!)
+	> whether people can comment on/ rate your songs/playlists in general (individually setable in song's/playlist's details)
+	set/change backup email address
+	
+	
+	
+	
+	
+Edit Song Details	
+	Song Name, Artist, Picture, Album, Description
+	Settings (e.g. enable/disable comments, enable/disable rating)
+	decide hashtags
+	
+Look at other people's profiles	
+	Comment on them, (request) follow, put on blacklist, report them to admin
+	
+Be notified (e.g. of people who want to follow me)	
+	
+Create Playlists, add songs and other playlists to them	
+Comment on Playlists, Report Playlist, Add PL Picture, Description, hashtags	
+Download Playlists (only own), delete playlists (own), edit playlists (own ..) 	
+Rate Playlists	
+	
+Search	by hashtags, in songs, in users, in playlists, in all, in music (both songs and playlists), by artists whatever
+	
+Ask the user if they want to open the player in a new window so that music continuously plays even if the page is changed	
+	
+Personal History/Timeline	
