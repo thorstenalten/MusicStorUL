@@ -1,0 +1,83 @@
+User flow			
+			
+Anywhere (Vis only)	goto Login		
+			
+Anywhere (User only)	goto Main Page		
+			
+Anywhere (Vis/User)	goto About		
+	goto FAQ		
+			
+Anywhere Comment	goto Author/Song Info PopUp		
+	if own content: do flag comment		
+			
+Login Page	do Login		
+	do Forgot Password		
+	goto Register Page		
+			
+Register Page	do Register		
+			
+Main Page	goto Upload Page		
+	goto Download Page		
+	goto Profile PopUp		
+	goto Create PL Page		
+	goto Change Playlist		
+	goto Delete Content Page		
+	goto Song PopUP		
+	goto (other) User PopUp		
+	do delete recent activity entry		
+	do search		
+			
+About Page			
+			
+FAQ Page			
+			
+Upload Page	goto enter optional Info Page		Question: Do we auto-direct to next page after something was dropped into field/selected by harddrive or use another UPLOAD button for that?
+	do dragdrop content		
+	do direct select on harddrive content		
+			
+Optional Info Page (Song)	do enter info		Note: this can also be the place where we ask the user whether the song is the same as the one we found in case we already have it
+	do upload pic		
+	goto upload page (with a notification that songs have been uploaded)		
+			
+Download Page	do select/deselect		
+	do download		
+			
+Create Playlist Page	do select/deselect		
+	do create		
+			
+Delete Content Page	do select/deselect		
+	do delete		
+			
+Change Playlist Page	do select/deselect		
+	do comit change		
+			
+Profile Pop Up	goto Edit Profile PopUp		
+	goto other user popUP		
+	do flag comment		
+	do comment		
+			
+Other User Pop Up	do comment		
+	do add/remove blacklist (i.e. user can't follow you/can't comment on your songs/profile)		
+	do follow		
+	do accept follow request (similar to below, but used when follow setting is ASK instead of ALL)		
+	do reject follower (i.e. stop person from following you without blacklisting them)		
+			
+Song Pop Up	if own: goto Edit song info PopUP		Note: when clicking on Playlist, instead of PopUp go to the Change Playlist Page
+	if own: do flag comment		
+	do comment		
+			
+Edit Profile PopUp	goto Profile PopUp (i.e. leave edit mode without closing the pop up)		
+	do change Pic		
+	do change required info		
+	do change optional info		
+	do commit required info changes		
+	do commit optional info changes		
+	do set NO/ALL/ASK Follow		Note: NO: other users cannot follow you (btn will be greyed out) ALL: all users can follow you withou explicit permission (can still go to individual user info pages to manually reject them) ASK: you need to permit each follow request before they are your follower(
+			
+Edit Song Info PopUp	goto Song PopUp (i.e. leave edit mode without closing the pop up)		
+	do change Pic		
+	do change optional info		
+	do commit optional info changes		
+	do delete (i.e. goto Delete Content Page with this particular Song already ticked)		
+			
+do Login	goto Main Page		
