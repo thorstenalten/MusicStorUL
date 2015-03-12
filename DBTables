@@ -1,0 +1,12 @@
+Starting to list DataBases as we would need them if we were to implement everything perfectly.
+Feel free to Comment, discuss and add.
+
+Tables:
+User – list of fully registered users
+tmpUser – list of registered users that haven’t confirmed their e-mail address yet (no access to any features yet)
+bannedUser – list of users that are permanently banned from the site
+Admin – list of admins (probably one entry)
+UserOpt – list user’s optional stuff; could split each attribute as an extra table
+Timeline – list of events on a user’s timeline (no comments, things like “__ has uploaded a new song”, “You have created a new playlist” and such)  maybe store only the most recent 20 or so for each user
+Notification – list of notifications (such as when receiving a follow-request)
+
