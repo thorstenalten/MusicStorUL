@@ -15,10 +15,11 @@ bannedUser – list of users that are permanently banned from the site
 Primary Key: Email/UID
 UID/Email: Unique Numeric
 
-flaggedUsers – list of users that have, for some reason, been flagged by someone for consideration of banning (or at least warning), each flag of a user should come with a small explanatory note on why they flagged that user (i.e. description of their misbehavior)
-Primary Key: Email/UID
+reportedUsers – list of users that have, for some reason, been flagged by someone for consideration of banning (or at least warning), each flag of a user should come with a small explanatory note on why they flagged that user (i.e. description of their misbehavior)
+Primary Key: reportID
 UID/Email: Unique Numeric
 UIDFlagged: User id of who flagged them
+reportID: unique numeric
 Description: String
 
 Admin – list of admins (probably one entry)
@@ -88,6 +89,8 @@ flaggedComments – list of comments flagged by users for being inappropriate in
 Primary Key: CID
 CID: unique numeric
 UID: unique numeric (id of the user that flagged the comment)
+AID: unique numeric (id of author of the comment)
+origin: triple of number (1: profile 2: song 3: playlist), respective ID and it's datetime of creation (this is so that in case of admin unflagging the comment it can be reinserted into the right place)
 
 Song – all necessary data on song
 Primary Key: SID
@@ -113,16 +116,23 @@ SID: unique numeric
 Rating: numeric
 UID: unique numeric (user id of the person that rated the song)
 
+SongTags
+Primary Key: SID
+Content: string
+
+reportedSongs – list of songs that have, for some reason, been reported by someone for consideration of banning (or at least warning), each flag of a user should come with a small explanatory note on why they flagged that user (i.e. description of their misbehavior)
+Primary Key: reportID
+SID: Unique Numeric
+UIDFlagged: User id of who flagged them
+reportID: unique numeric
+Description: String
+
 Playlist - all necessary data on playlist
 Primary Key: PID
 PID: unique numeric
 PName: String
 UID: unique numeric
 Content: songList
-
-SongTags
-Primary Key: SID
-Content: string
 
 settingsPlaylist – the Settings for a Playlist, such as whether it is public (as in, others can listen to it), whether it can be commented on if it is public (can’t comment on private anyway I suppose)
 Primary Key: PID
@@ -145,3 +155,10 @@ UID: unique numeric (user id of the person that rated the playlist)
 PlaylistTags
 Primary Key: PID
 Content: string
+
+reportedPlaylists – list of playlists that have, for some reason, been reported by someone for consideration of banning (or at least warning), each flag of a user should come with a small explanatory note on why they flagged that user (i.e. description of their misbehavior)
+Primary Key: reportID
+PID: Unique Numeric
+UIDFlagged: User id of who flagged them
+reportID: unique numeric
+Description: String
