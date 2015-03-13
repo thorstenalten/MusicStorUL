@@ -1,21 +1,147 @@
 Tables: (All Tables could possibly include DATETIMES for when an action occurred, i.e. when a Song was entered/uploaded – could be used for statistics later on)
-User – list of fully registered users and their necessary info
-tmpUser – list of registered users that haven’t confirmed their e-mail address yet (no access to any features yet)
-bannedUser – list of users that are permanently banned from the site
-flaggedUsers – list of users that have, for some reason, been flagged by someone for consideration of banning (or at least warning), each flag of a user should come with a small explanatory note on why they flagged that user (i.e. description of their misbehavior)
-Admin – list of admins (probably one entry)
-settingsUser – list of Settings for User (such as if and how other people can follow you, whether they can send email, what theme you choose for the website etc – not the optional stuff but things that actually need to be set to some default value)
-userOptional – list user’s optional stuff; could split each attribute as an extra table
-Timeline – list of events on a user’s timeline (no comments, things like “__ has uploaded a new song”, “You have created a new playlist” and such)  maybe store only the most recent 20 or so for each user
-Notification – list of notifications (such as when receiving a follow-request)
-profileComments – list of comments on respective user’s profile
-songComments – list of comments on respective song
-playlistComments – list of comments on respective playlist
-flaggedComments – list of comments flagged by users for being inappropriate in some way – these will be hidden unless an admin unflags them (mind, you can delete comments on your own profile page but these are just deleted instead of flagged and don’t appear in this list; you can also set your songs and playlists and your profile to disallow comments in general, and each user has a blacklist with people that cannot comment on their stuff at all)
-Song – all necessary data on song
-settingsSong – the Settings for a Song (might get difficult to read if put in Table: Song)
-songOptional – optional info, we already talked about this stuff – as with userOptional might be good to split some of these attributes into their own tables (e.g. if there are some that are likely to be mostly null or likely to be mostly filled out; hashtags as well as ratings may be good candidates for their own tables)
-Playlist - all necessary data on playlist
-settingsPlaylist – the Settings for a Playlist, such as whether it is public (as in, others can listen to it), whether it can be commented on if it is public (can’t comment on private anyway I suppose)
-playlistOptional – optional info – as with userOptional might be good to split some of these attributes into their own tables (e.g. if there are some that are likely to be mostly null or likely to be mostly filled out; hashtags as well as ratings may be good candidates for their own tables)
 
+User – list of fully registered users and their necessary info
+Primary Key: UID 
+UID/Email: Unique Numeric
+Uname: Alphabetic
+Password: No requirements alphabetic and numeric
+SecondaryEmail: string
+
+tmpUser – list of registered users that haven’t confirmed their e-mail address yet (no access to any features yet)
+Primary Key: Email/UID
+UID/Email: Unique Numeric
+
+bannedUser – list of users that are permanently banned from the site
+Primary Key: Email/UID
+UID/Email: Unique Numeric
+
+flaggedUsers – list of users that have, for some reason, been flagged by someone for consideration of banning (or at least warning), each flag of a user should come with a small explanatory note on why they flagged that user (i.e. description of their misbehavior)
+Primary Key: Email/UID
+UID/Email: Unique Numeric
+UIDFlagged: User id of who flagged them
+Description: String
+
+Admin – list of admins (probably one entry)
+Primary Key: Email/UID
+UID/Email: Unique Numeric
+Password: password
+
+settingsUser – list of Settings for User (such as if and how other people can follow you, whether they can send email, what theme you choose for the website etc – not the optional stuff but things that actually need to be set to some default value)
+Primary Key: UID
+UID: Unique Numeric
+Theme: String (boolean depending on amount of themes)
+Followable: Integer
+Email: boolean (public or private)
+ProfileCommentable: boolean
+SongCommentable: boolean
+PlaylistCommentable: boolean
+
+userBlacklist - users can put other on their personal blacklist, those on it won't be able to comment rate follow them
+Primary Key: UID
+UID: Unique Numeric
+blacklist: string (uid;nextuid;nextuid;)
+
+userOptional – list user’s optional stuff; could split each attribute as an extra table
+Primary Key: UID
+UID: Unique numeric
+ProfilePicture: String (file path)
+DOB: Date
+Bio: String
+
+Timeline – list of events on a user’s timeline (no comments, things like “__ has uploaded a new song”, “You have created a new playlist” and such)  maybe store only the most recent 20 or so for each user
+Primary Key: UID
+UID: Unique numeric
+EventID: Unique numeric
+Content: String
+Date: date
+
+Notification – list of notifications (such as when receiving a follow-request)
+Primary Key: UID
+UID: unique numeric
+Content: string
+
+profileComments – list of comments on respective user’s profile
+Primary Key: UID
+UID: unique numeric
+CID: unique numeric
+AID: unique numeric (author id of the comment)
+Content: String
+Date: date
+
+songComments – list of comments on respective song
+Primary Key: UID
+SID: unique numeric
+CID: unique numeric
+AID: unique numeric (author id of the comment)
+Content: String
+Date: date
+
+playlistComments – list of comments on respective playlist
+Primary Key: UID
+UID: unique numeric
+PID: unique numeric
+AID: unique numeric (author id of the comment)
+Content: String
+Date: date
+
+flaggedComments – list of comments flagged by users for being inappropriate in some way – these will be hidden unless an admin unflags them (mind, you can delete comments on your own profile page but these are just deleted instead of flagged and don’t appear in this list; you can also set your songs and playlists and your profile to disallow comments in general, and each user has a blacklist with people that cannot comment on their stuff at all)
+Primary Key: CID
+CID: unique numeric
+UID: unique numeric (id of the user that flagged the comment)
+
+Song – all necessary data on song
+Primary Key: SID
+SID: unique numeric
+SRC: string (file path)
+
+settingsSong – the Settings for a Song (might get difficult to read if put in Table: Song)
+Primary Key: SID
+SID: unique numeric
+Commentable: boolean
+Private: boolean
+
+songOptional – optional info, we already talked about this stuff – as with userOptional might be good to split some of these attributes into their own tables (e.g. if there are some that are likely to be mostly null or likely to be mostly filled out; hashtags as well as ratings may be good candidates for their own tables)
+Primary Key: SID
+SID: unique numeric
+AlbumArtwork: String (file path)
+Genre: String
+Description: String
+
+SongRating
+Primary Key: SID
+SID: unique numeric
+Rating: numeric
+UID: unique numeric (user id of the person that rated the song)
+
+Playlist - all necessary data on playlist
+Primary Key: PID
+PID: unique numeric
+PName: String
+UID: unique numeric
+Content: songList
+
+SongTags
+Primary Key: SID
+Content: string
+
+settingsPlaylist – the Settings for a Playlist, such as whether it is public (as in, others can listen to it), whether it can be commented on if it is public (can’t comment on private anyway I suppose)
+Primary Key: PID
+public: boolean
+commentable: boolean
+PID: unique numeric
+
+playlistOptional – optional info – as with userOptional might be good to split some of these attributes into their own tables (e.g. if there are some that are likely to be mostly null or likely to be mostly filled out; hashtags as well as ratings may be good candidates for their own tables)
+Primary Key: PID
+PID: unique numeric
+PlaylistArtwork: String (file path)
+Description: String
+
+PlaylistRating
+Primary Key: PID
+PID: unique numeric
+Rating: numeric
+UID: unique numeric (user id of the person that rated the playlist)
+
+PlaylistTags
+Primary Key: PID
+Content: string
