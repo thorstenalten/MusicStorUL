@@ -4,7 +4,7 @@ User – list of fully registered users and their necessary info
 Primary Key: UID 
 UID/Email: Unique Numeric
 Uname: Alphabetic
-Password: No requirements alphabetic and numeric
+Password: No requirements alphabetic and numeric NOT NULL
 SecondaryEmail: string
 
 tmpUser – list of registered users that haven’t confirmed their e-mail address yet (no access to any features yet)
