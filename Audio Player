@@ -1,0 +1,87 @@
+Basic Audio player
+
+- plays audio from given resource 
+- btn for play/pause audio
+- btn for stop audio (i.e. pause and revert back to start)
+- btn for opening in new window
+- btn for closing the window/tab
+
+Important: hmtl5 audio tag is client side only (i.e. no asp tag for it). I haven't figured out a way to get the resource from the server yet, right now I only know how to play local music of which I know the path.
+
+File is simple html:
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title></title>
+    <script src="JavaScript.js"></script>
+</head>
+<body>
+    <audio controls="controls" autoplay id="audioPlayer">
+        <source src="SeeU.mp3" type="audio/mpeg" />
+        <!-- if one source fails (e.g. cause browser does not support file format) automatically tries next source -->
+        <source src="SeeU.ogg" type="audio/ogg" />
+        Your browser does not support the audio element.
+    </audio>
+
+    <button id ="btnPlayPauseAudio" onclick="PlayPauseAudio()">Pause</button>
+
+    <button id="btnStopAudio" onclick="StopAudio()">Stop</button>
+
+    <button id="btnOpenInNewWindow" onclick="openInNewWindow()">Open this in new Window</button>
+
+    <button id="btnId" onclick="closeWindow()">Close Window</button>
+
+</body>
+</html>
+
+JavaScript.js is:
+
+var audioPlayer, btn;
+var audioIsPaused = false;
+
+function PlayPauseAudio()
+{
+    audioPlayer = document.getElementById("audioPlayer");
+    btn = document.getElementById("btnPlayPauseAudio");
+
+    audioIsPaused = audioPlayer.paused;
+
+    if (audioIsPaused)
+    {
+        // start audio
+        audioPlayer.play();
+        // change caption of button
+        btn.textContent = "Pause";
+        // audio isn't paused anymore
+        audioIsPaused = false;
+    }
+    else
+    {
+        // pause audio
+        audioPlayer.pause();
+        btn.textContent = "Play";
+        // audio is now paused
+        audioIsPaused = true;
+    }
+
+}
+
+function StopAudio()
+{
+    audioPlayer = document.getElementById("audioPlayer");
+
+    // stop playing audio (simulate by pausing and setting time to 0 i.e. beginning of song)
+    audioPlayer.pause();
+    audioPlayer.currentTime = 0;
+
+}
+
+function openInNewWindow()
+{
+    window.open("HtmlPage.html", "newwindow", 'width=400, height=250');
+}
+
+function closeWindow() {
+     window.close();
+}
