@@ -1,18 +1,20 @@
-<%@ Page Language="C#" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="_Default" %>
+    <%@ Page Language="C#" AutoEventWireup="true" CodeFile="Default2.aspx.cs" Inherits="Default2" %>
 
-<!DOCTYPE html>
+    <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head runat="server">
-    <title></title>
-</head>
-<body>
-    <form id="Form1" method="post" enctype="multipart/form-data" runat="server">
-    <div>
-    <INPUT type=file id=File1 name=File1 runat="server" />
-    <br>
-    <input type="submit" id="Submit1" value="Upload" runat="server" />
-    </div>
-    </form>
-</body>
-</html>
+    <html xmlns="http://www.w3.org/1999/xhtml">
+    <head runat="server">
+        <title></title>
+        <script src="https://rawgit.com/enyo/dropzone/master/dist/dropzone.js"></script>
+        <link rel="stylesheet" href="https://rawgit.com/enyo/dropzone/master/dist/dropzone.css">
+    </head>
+    <body>
+        <form id="frmMain" runat="server" class="dropzone">
+            <div>
+                <div class="fallback">
+                    <input name="file" type="file" multiple />
+                </div>
+            </div>
+        </form>
+    </body>
+    </html>  
