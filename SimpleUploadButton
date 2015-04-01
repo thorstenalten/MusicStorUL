@@ -4,33 +4,79 @@ using System.Linq;
 using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
+using System.IO;
+using System.Data;
+using System.Data.SqlClient;
+using System.Configuration;
+using System.Text.RegularExpressions;
 
-public partial class _Default : System.Web.UI.Page
+public partial class Default2 : System.Web.UI.Page
 {
     protected void Page_Load(object sender, EventArgs e)
     {
+        foreach (string s in Request.Files)
+        {
+            HttpPostedFile file = Request.Files[s];
 
+            int fileSizeInBytes = file.ContentLength;
+            string fileName = Request.Headers["X-File-Name"];
+            string fileExtension = "";
+
+            if (checkIsMusic(fileName))
+            {
+                if (!string.IsNullOrEmpty(fileName))
+                    fileExtension = Path.GetExtension(fileName);
+                    string savedFileName = Path.Combine(@"C:\Music\", fileExtension);
+                try
+                {
+                    //Update the SQL tables
+                    SqlConnection connection = new SqlConnection();
+                    connection.ConnectionString = @"Data Source=(LocalDB)\v11.0;AttachDbFilename=|DataDirectory|\Database.mdf;Integrated Security=True";
+                    SqlCommand command = new SqlCommand("Select MAX(SID) from Song", connection);
+
+                    SqlDataReader myReader = null;
+                    myReader = command.ExecuteReader();
+                    int maxSID = 0;
+                    while (myReader.Read())
+                    {
+                        maxSID = myReader.GetInt32(0);
+                    }
+
+                    SqlParameter paramSID = new SqlParameter("@SID", SqlDbType.Int);
+                    paramSID.Value = maxSID + 1;
+                    SqlParameter paramSRC = new SqlParameter("@SRC", SqlDbType.Text);
+                    paramSRC.Value = savedFileName;
+
+                    SqlCommand insert = new SqlCommand("INSERT INTO SONG (SID,SRC) VALUES (@SID,@SRC)", connection);
+                    insert.Parameters.Add(paramSID);
+                    insert.Parameters.Add(paramSRC);
+                    insert.ExecuteNonQuery();
+                    connection.Close();
+                }
+                catch
+                {
+                    Response.Write("Database Error");
+                }
+
+                // IMPORTANT! Make sure to validate uploaded file contents, size, etc. to prevent scripts being uploaded into your web app directory
+                file.SaveAs(savedFileName);
+            }
+            else
+                Response.Write("Not music");
+        }
     }
-
-    private void Submit1_ServerClick(object sender, System.EventArgs e)
+    public bool checkIsMusic(string file)
     {
-        if ((File1.PostedFile != null) && (File1.PostedFile.ContentLength > 0))
+        string extension = Path.GetExtension(file);
+        extension = extension.ToLower();
+        switch (extension)
         {
-            string fn = System.IO.Path.GetFileName(File1.PostedFile.FileName);
-            string SaveLocation = Server.MapPath("App_Data") + "\\" + fn;
-            try
-            {
-                File1.PostedFile.SaveAs(SaveLocation);
-                Response.Write("The file has been uploaded.");
-            }
-            catch (Exception ex)
-            {
-                Response.Write("Error: " + ex.Message);
-            }
+            case ".mp3":
+                Response.Write("File accepted");
+                return true;
+            default:
+                return false;
         }
-        else
-        {
-            Response.Write("Please select a file to upload.");
-        }
+
     }
 }
