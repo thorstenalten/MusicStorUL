@@ -119,8 +119,6 @@ public partial class _Default : System.Web.UI.Page
             string[] splitID = txtEmail.Text.Split('@');
             string UID = splitID[0];
             string username = txtUsername.Text;
-            //just to keep all of the usernames in the table lower case, may be easier for searching later on?
-            username.ToLower();
             username.Trim();
             string password = txtPassword.Text;
             string backupEmail = txtBackupEmail.Text;
@@ -174,7 +172,7 @@ public partial class _Default : System.Web.UI.Page
         SqlConnection connection = new SqlConnection(@"Data Source=(LocalDB)\v11.0;AttachDbFilename=|DataDirectory|\Database.mdf;Integrated Security=True");
         SqlDataReader reader;
         String argsString = args.Value;
-        string sql = "SELECT * FROM Users where Uname = @argsString";
+        string sql = "SELECT Uname FROM Users where Uname = @argsString";
 
         connection.Open();
         SqlCommand cmd = new SqlCommand(sql, connection);
@@ -204,7 +202,7 @@ public partial class _Default : System.Web.UI.Page
         SqlDataReader reader;
         String [] argsString = args.Value.Split('@');
         String argsValue = argsString[0];
-        string sql = "SELECT * FROM Users where UID = @argsValue";
+        string sql = "SELECT UID FROM Users where UID = @argsValue";
 
         connection.Open();
         SqlCommand cmd = new SqlCommand(sql, connection);
