@@ -1,5 +1,4 @@
-HTML stuff first:
-
+HTML Stuff first:
 <%@ Page Language="C#" AutoEventWireup="true" CodeFile="Login.aspx.cs" Inherits="_Default" %>
 
 <!DOCTYPE html>
@@ -7,6 +6,7 @@ HTML stuff first:
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head runat="server">
     <title>Login</title>
+    <link href="StyleSheet.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
     <form id="form1" runat="server">
@@ -16,7 +16,7 @@ HTML stuff first:
         <asp:TextBox ID="txtLogin" runat="server" Width="100px" OnTextChanged="txtUsername_TextChanged"></asp:TextBox>
 
         <asp:RequiredFieldValidator ID="valUsername" runat="server" ErrorMessage="You must enter a username, ID or email address." 
-            ControlToValidate="txtLogin"></asp:RequiredFieldValidator>
+            ControlToValidate="txtLogin">*</asp:RequiredFieldValidator>
 
         <asp:CustomValidator ID="CustomValidator1" runat="server" ErrorMessage="Username/Password Incorrect."
             OnServerValidate="LoginValidate">*</asp:CustomValidator>
@@ -25,7 +25,7 @@ HTML stuff first:
         <asp:Label ID="lblPassword" runat="server" Text="Password: " Font-Bold="true" Width="190px"></asp:Label>
         <asp:TextBox ID="txtPassword" runat="server" Width="100px" TextMode="Password"></asp:TextBox>
         <asp:RequiredFieldValidator ID="valPassword" runat="server" ErrorMessage="You must enter a password."
-            ControlToValidate="txtPassword"></asp:RequiredFieldValidator>
+            ControlToValidate="txtPassword">*</asp:RequiredFieldValidator>
         <br />
         <br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -34,13 +34,17 @@ HTML stuff first:
         <asp:ValidationSummary ID="valSummary" runat="server" DisplayMode="BulletList" />
     
     </div>
+        <p>
+            &nbsp;</p>
+        <p>
         <asp:Label ID="lblLoginSuccess" runat="server"></asp:Label>
+        </p>
     </form>
 </body>
 </html>
 
+C# Code:
 
-C# code:
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -193,7 +197,7 @@ public partial class _Default : System.Web.UI.Page
 
         }
         else
-            lblLoginSuccess.Text = "Not logged in!";
+            lblLoginSuccess.Text = "Username/Password Incorrect!";
        
     }
 }
