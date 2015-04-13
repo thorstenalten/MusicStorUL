@@ -96,6 +96,7 @@ Song – all necessary data on song
 Primary Key: SID
 SID: unique numeric
 SRC: string (file path)
+SName: string (song name)
 
 settingsSong – the Settings for a Song (might get difficult to read if put in Table: Song)
 Primary Key: SID
