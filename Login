@@ -1,0 +1,203 @@
+HTML Stuff first:
+<%@ Page Language="C#" AutoEventWireup="true" CodeFile="Login.aspx.cs" Inherits="_Default" %>
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>Login</title>
+    <link href="StyleSheet.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <form id="form1" runat="server">
+    <div style="height: 130px">
+    
+        <asp:Label ID="lblLogin"  runat="server" Text="Enter ID/Username/Email: " Font-Bold="true" Width="190px"></asp:Label>
+        <asp:TextBox ID="txtLogin" runat="server" Width="100px" OnTextChanged="txtUsername_TextChanged"></asp:TextBox>
+
+        <asp:RequiredFieldValidator ID="valUsername" runat="server" ErrorMessage="You must enter a username, ID or email address." 
+            ControlToValidate="txtLogin">*</asp:RequiredFieldValidator>
+
+        <asp:CustomValidator ID="CustomValidator1" runat="server" ErrorMessage="Username/Password Incorrect."
+            OnServerValidate="LoginValidate">*</asp:CustomValidator>
+        <br />
+        <br />
+        <asp:Label ID="lblPassword" runat="server" Text="Password: " Font-Bold="true" Width="190px"></asp:Label>
+        <asp:TextBox ID="txtPassword" runat="server" Width="100px" TextMode="Password"></asp:TextBox>
+        <asp:RequiredFieldValidator ID="valPassword" runat="server" ErrorMessage="You must enter a password."
+            ControlToValidate="txtPassword">*</asp:RequiredFieldValidator>
+        <br />
+        <br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <asp:Button ID="btnLogin" runat="server" Text="Login" Font-Bold="true" OnClick="LoginValidate" />
+
+        <asp:ValidationSummary ID="valSummary" runat="server" DisplayMode="BulletList" />
+    
+    </div>
+        <p>
+            &nbsp;</p>
+        <p>
+        <asp:Label ID="lblLoginSuccess" runat="server"></asp:Label>
+        </p>
+    </form>
+</body>
+</html>
+
+C# Code:
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data.SqlClient;
+using System.Data;
+using System.Text.RegularExpressions;
+
+public partial class _Default : System.Web.UI.Page
+{
+    string loginValue;
+    bool Valid;
+
+    protected void Page_Load(object sender, EventArgs e)
+    {
+
+    }
+
+   
+    protected void txtUsername_TextChanged(object sender, EventArgs e)
+    {
+        string login = txtLogin.Text;
+        Regex regexEmail = new Regex("^[0-9]+@+studentmail.ul.ie$");
+        Regex regexID = new Regex("^[0-9]*$");
+        Match matchEmail = regexEmail.Match(login);
+        Match matchID = regexID.Match(login);
+
+        if (matchEmail.Success)
+        {
+            loginValue = "mail";
+        }
+        else if (matchID.Success)
+        {
+            loginValue = "ID";
+        }
+        else
+        {
+            loginValue = "username";
+        }
+    }
+
+    protected bool loginUsername(string username, string password)
+    {
+        SqlConnection connection = new SqlConnection(@"Data Source=(LocalDB)\v11.0;AttachDbFilename=|DataDirectory|\Database.mdf;Integrated Security=True");
+        SqlDataReader reader;
+        bool valid = false;
+
+        String sql = "SELECT * FROM Users where Uname = @username AND Password = @password";
+
+        connection.Open();
+        SqlCommand cmd = new SqlCommand(sql, connection);
+        cmd.Parameters.Add("@username", SqlDbType.VarChar);
+        cmd.Parameters["@username"].Value = username;
+
+        cmd.Parameters.Add("@password", SqlDbType.VarChar);
+        cmd.Parameters["@password"].Value = password;
+
+        reader = cmd.ExecuteReader();
+
+        if (reader.HasRows)
+        {
+            valid = true;
+        }
+
+        connection.Close();
+        return valid;
+    }
+
+    protected bool loginEmail(string email, string password)
+    {
+        SqlConnection connection = new SqlConnection(@"Data Source=(LocalDB)\v11.0;AttachDbFilename=|DataDirectory|\Database.mdf;Integrated Security=True");
+        SqlDataReader reader;
+        bool valid = false;
+        String[] parseID = email.Split('@');
+        String id = parseID[0];
+
+        String sql = "SELECT * FROM Users where UID = @id AND Password = @password";
+
+        connection.Open();
+        SqlCommand cmd = new SqlCommand(sql, connection);
+        cmd.Parameters.Add("@id", SqlDbType.VarChar);
+        cmd.Parameters["@id"].Value = id;
+
+        cmd.Parameters.Add("@password", SqlDbType.VarChar);
+        cmd.Parameters["@password"].Value = password;
+
+        reader = cmd.ExecuteReader();
+
+        if (reader.HasRows)
+        {
+            valid = true;
+        }
+
+        connection.Close();
+        return valid;
+    }
+
+    protected bool loginID(string id, string password)
+    {
+        SqlConnection connection = new SqlConnection(@"Data Source=(LocalDB)\v11.0;AttachDbFilename=|DataDirectory|\Database.mdf;Integrated Security=True");
+        SqlDataReader reader;
+        bool valid = false;
+        int intID = Convert.ToInt32(id);
+
+        String sql = "SELECT * FROM Users where UID = @intID AND Password = @password";
+
+        connection.Open();
+        SqlCommand cmd = new SqlCommand(sql, connection);
+        cmd.Parameters.Add("@intID", SqlDbType.VarChar);
+        cmd.Parameters["@intID"].Value = intID;
+
+        cmd.Parameters.Add("@password", SqlDbType.VarChar);
+        cmd.Parameters["@password"].Value = password;
+
+        reader = cmd.ExecuteReader();
+
+        if (reader.HasRows)
+        {
+            valid = true;
+        }
+
+        connection.Close();
+        return valid;
+    }
+
+
+
+    protected void LoginValidate(object sender, EventArgs e)
+    {
+        switch (loginValue)
+        {
+            case "mail":
+                if (loginEmail(txtLogin.Text, txtPassword.Text))
+                    Valid = true;
+                break;
+            case "ID":
+                if (loginID(txtLogin.Text, txtPassword.Text))
+                    Valid = true;
+                break;
+            case "username":
+                if (loginUsername(txtLogin.Text, txtPassword.Text))
+                    Valid = true;
+                break;
+        }
+        if (Valid)
+        {
+            lblLoginSuccess.Text = "Logged in successfully!";
+
+        }
+        else
+            lblLoginSuccess.Text = "Username/Password Incorrect!";
+       
+    }
+}

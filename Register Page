@@ -1,0 +1,233 @@
+Code for layout first:
+
+<%@ Page Language="C#" AutoEventWireup="true" CodeFile="Register.aspx.cs" Inherits="_Default" %>
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>Registration Page</title>
+</head>
+<body style="height: 200px" >
+    <form id="form1" runat="server">
+    <div >
+    
+        <asp:Label ID="lblUsername" runat="server" Text="Username: " Font-Bold="true" Width="170px" Font-Size="Medium"></asp:Label>
+        &nbsp;<asp:TextBox ID="txtUsername" runat="server" Width="170px" ></asp:TextBox>
+        <asp:RequiredFieldValidator ID="valUsernameRequired" runat="server" ControlToValidate="txtUsername" 
+            ErrorMessage="You must enter a username.">*</asp:RequiredFieldValidator>
+
+        <asp:CustomValidator ID="valUsernameAlreadyTaken" runat="server" ErrorMessage="Username is not available."
+            OnServerValidate="UsernameValidate" ControlToValidate="txtUsername">*</asp:CustomValidator>
+        <br />
+        <br />
+    
+        <asp:Label ID="lblEmail" runat="server" Text="Email : " Font-Bold="True" Width="170px" Font-Size="Medium"></asp:Label>
+        &nbsp;<asp:TextBox ID="txtEmail" runat="server" Width="170px" TextMode="Email" OnTextChanged="txtEmail_TextChanged"></asp:TextBox>
+        <asp:RequiredFieldValidator ID="valEmailRequired" runat="server" ControlToValidate="txtEmail" 
+            ErrorMessage="You must enter an email address.">*</asp:RequiredFieldValidator>
+
+        <asp:RegularExpressionValidator ID="valRegExpEmail" runat="server" ErrorMessage="Email address must be a UL email." ControlToValidate="txtEmail" 
+            ValidationExpression="^[0-9]+@+studentmail.ul.ie$">*</asp:RegularExpressionValidator>
+
+        <asp:CustomValidator ID="valIDAlreadyUsed" runat="server" ErrorMessage="There is already an account with this email address, do you need to log in?"
+            OnServerValidate="IDValidate" ControlToValidate="txtEmail">*</asp:CustomValidator>
+        <br />
+        <br />
+
+         <asp:Label ID="lblConfirmEmail" runat="server" Text="Confirm Email : " Font-Bold="True" Width="170px" Font-Size="Medium"></asp:Label>
+        &nbsp;<asp:TextBox ID="txtConfirmEmail" runat="server" Width="170px" TextMode="Email"></asp:TextBox>
+        <asp:RequiredFieldValidator ID="valConfirmEmail" runat="server" ControlToValidate="txtConfirmEmail" 
+            ErrorMessage="You must confirm your email address.">*</asp:RequiredFieldValidator>
+
+        <asp:CompareValidator ID="valCompareEmails" runat="server" ErrorMessage="Email addresses do not match." ControlToCompare="txtConfirmEmail" 
+            ControlToValidate="txtEmail">*</asp:CompareValidator>
+        <br />
+        <br />
+
+        <asp:Label ID="lblPassword" runat="server" Text="Password : " Font-Bold="True" Width="170px" Font-Size="Medium"></asp:Label>
+        &nbsp;<asp:TextBox ID="txtPassword" runat="server" Width="170px" TextMode="Password"></asp:TextBox>
+        <asp:RequiredFieldValidator ID="valPasswordRequired" runat="server" ControlToValidate="txtPassword" 
+            ErrorMessage="You must enter a password.">*</asp:RequiredFieldValidator>
+        <br />
+        <br />
+
+        <asp:Label ID="lblConfirmPassword" runat="server" Text="Confirm Password: " Font-Bold="True" Width="170px" 
+            Font-Size="Medium"></asp:Label>
+        &nbsp;<asp:TextBox ID="txtConfirmPassword" runat="server" Width="170px" TextMode="Password"></asp:TextBox>
+        <asp:RequiredFieldValidator ID="valConfirmPasswordRequired" runat="server" ControlToValidate="txtConfirmPassword" 
+            ErrorMessage="You must confirm your password.">*</asp:RequiredFieldValidator>
+
+        <asp:CompareValidator ID="valComparePasswords" runat="server" ErrorMessage="Passwords do not match." ControlToCompare="txtConfirmPassword"
+             ControlToValidate="txtPassword">*</asp:CompareValidator>
+        <br />
+        <br />
+
+        <asp:Label ID="lblBackupEmail" runat="server" Text="Backup Email: (optional)" Font-Bold="True" Width="170px" Font-Size="Medium"></asp:Label>
+        &nbsp;<asp:TextBox ID="txtBackupEmail" runat="server" Width="170px" TextMode="Email"></asp:TextBox>
+
+        <asp:RegularExpressionValidator ID="valBackupEmail" runat="server" ErrorMessage="Must be an email address." ControlToValidate="txtBackupEmail" 
+            ValidationExpression="^$|^.*@.*\..*$">*</asp:RegularExpressionValidator>
+        <br />
+        <br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <asp:Button ID="btnRegister" runat="server" Font-Bold="True" Text="Register" OnClick="btnRegister_Click" />
+        <br />
+        <br />
+        <asp:Label ID="lblSuccess" runat="server"></asp:Label>
+        <br />
+        <br />
+    
+        <asp:ValidationSummary ID="valSummary" DisplayMode="BulletList" HeaderText="Validation Errors" runat="server" />
+    </div>
+    </form>
+</body>
+</html>
+
+
+
+
+
+
+C# Code:
+
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data;
+using System.Data.SqlClient;
+using System.Configuration;
+using System.Text.RegularExpressions;
+
+public partial class _Default : System.Web.UI.Page
+{
+
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        
+    }
+
+    protected void btnRegister_Click(object sender, EventArgs e)
+    {
+        if (IsValid)
+        {
+            SqlConnection connection = new SqlConnection(@"Data Source=(LocalDB)\v11.0;AttachDbFilename=|DataDirectory|\Database.mdf;Integrated Security=True");
+            string[] splitID = txtEmail.Text.Split('@');
+            string UID = splitID[0];
+            string username = txtUsername.Text;
+            username.Trim();
+            string password = txtPassword.Text;
+            string backupEmail = txtBackupEmail.Text;
+            bool backupEmailPresent = true;
+            String sql;
+            if (String.IsNullOrEmpty(backupEmail))
+            {
+                backupEmailPresent = false;
+                sql = "INSERT INTO Users VALUES(@UID, @Username, @Password, NULL)";
+            }
+
+            else
+                sql = "INSERT INTO Users VALUES(@UID, @Username, @Password, @BackupEmail)";
+
+            //if there is an error with the data it will catch the exception and display an error
+            try
+            {
+                connection.Open();
+                SqlCommand command = new SqlCommand(sql, connection);
+                command.Parameters.Add("@UID", SqlDbType.Int);
+                command.Parameters["@UID"].Value = UID;
+
+                command.Parameters.Add("@Username", SqlDbType.VarChar);
+                command.Parameters["@Username"].Value = username;
+
+                command.Parameters.Add("@Password", SqlDbType.VarChar);
+                command.Parameters["@Password"].Value = password;
+
+                if (backupEmailPresent)
+                {
+                    command.Parameters.Add("@BackupEmail", SqlDbType.VarChar);
+                    command.Parameters["@BackupEmail"].Value = backupEmail;
+                }
+                
+                command.ExecuteNonQuery();
+                connection.Close();
+                //email is not actually sent, we're just saying it is
+                lblSuccess.Text = "An email with a verification link has been sent to your account!";
+            }
+            catch
+            {
+                Response.Write("Error writing to database.");
+            }
+
+        }
+        
+    }
+    protected void UsernameValidate (object sender, ServerValidateEventArgs args)
+    {
+      //need to run check here to see if username is already in the database
+        SqlConnection connection = new SqlConnection(@"Data Source=(LocalDB)\v11.0;AttachDbFilename=|DataDirectory|\Database.mdf;Integrated Security=True");
+        SqlDataReader reader;
+        String argsString = args.Value;
+        string sql = "SELECT Uname FROM Users where Uname = @argsString";
+
+        connection.Open();
+        SqlCommand cmd = new SqlCommand(sql, connection);
+        cmd.Parameters.Add("@argsString", SqlDbType.VarChar);
+        cmd.Parameters["@argsString"].Value = argsString;
+
+        reader = cmd.ExecuteReader();
+
+        if(!reader.HasRows)
+        {
+            args.IsValid = true;
+        }
+
+        else
+        {
+            args.IsValid = false;
+        }
+
+
+        connection.Close();
+
+    }
+
+    protected void IDValidate (object sender, ServerValidateEventArgs args)
+    {
+        SqlConnection connection = new SqlConnection(@"Data Source=(LocalDB)\v11.0;AttachDbFilename=|DataDirectory|\Database.mdf;Integrated Security=True");
+        SqlDataReader reader;
+        String [] argsString = args.Value.Split('@');
+        String argsValue = argsString[0];
+        string sql = "SELECT UID FROM Users where UID = @argsValue";
+
+        connection.Open();
+        SqlCommand cmd = new SqlCommand(sql, connection);
+        cmd.Parameters.Add("@argsValue", SqlDbType.VarChar);
+        cmd.Parameters["@argsValue"].Value = argsValue;
+
+        reader = cmd.ExecuteReader();
+
+        if (!reader.HasRows)
+        {
+            args.IsValid = true;
+        }
+
+        else
+        {
+            args.IsValid = false;
+        }
+
+
+        connection.Close();
+    }
+    protected void txtEmail_TextChanged(object sender, EventArgs e)
+    {
+        string [] idCheck = txtEmail.Text.Split('@');
+        string id = idCheck[0];
+        //run check annette talked about to see if given ID is actually real/valid
+    }
+}
