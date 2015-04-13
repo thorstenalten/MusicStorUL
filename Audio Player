@@ -6,8 +6,6 @@ Basic Audio player
 - btn for opening in new window
 - btn for closing the window/tab
 
-Important: hmtl5 audio tag is client side only (i.e. no asp tag for it). I haven't figured out a way to get the resource from the server yet, right now I only know how to play local music of which I know the path.
-
 File is simple html:
 
 <!DOCTYPE html>
@@ -85,3 +83,69 @@ function openInNewWindow()
 function closeWindow() {
      window.close();
 }
+
+--------------------------------------------------------------------------------------
+Now with ASP (haven't re-implemented the button functions and stuff, just to show how to use the audio tag from server side)
+
+c#
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+
+public partial class _Default : System.Web.UI.Page
+{
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        //audioID.Attributes["src"] = "/MusicFiles/Y15-1.mp3";
+    }
+    protected void ListBox1_SelectedIndexChanged(object sender, EventArgs e)
+    {
+        if (ListBox1.SelectedItem != null)
+            Label1.Text = "You selected: " + ListBox1.SelectedItem.Value;
+        else
+            Label1.Text = "Nothing selected?"; // can't happen in this case but if I put this on Page_Load it may possibly somehow .. I guess?
+
+        // real thing
+        audioID.Attributes["src"] = ListBox1.SelectedItem.Value;
+    }
+}
+
+html
+
+<%@ Page Language="C#" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="_Default" %>
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title></title>
+</head>
+<body>
+
+    <form id="form1" runat="server">
+    <div>
+        <asp:Label ID="Label1" runat="server" Text="Label"></asp:Label>
+        <audio id="audioID" controls="controls" runat="server"> 
+            <source src="/MusicFiles/Y14-4.mp3" /> 
+
+        </audio>
+    </div>
+
+        <asp:SqlDataSource ID="SqlDataSource1" runat="server" ConnectionString="<%$ ConnectionStrings:ConnectionString %>" SelectCommand="SELECT [SRC] FROM [Song]"></asp:SqlDataSource>
+        <asp:ListBox ID="ListBox1" runat="server" DataSourceID="SqlDataSource1" DataTextField="SRC" DataValueField="SRC" AutoPostBack="true" OnSelectedIndexChanged="ListBox1_SelectedIndexChanged"></asp:ListBox>
+
+    </form>
+
+    
+</body>
+</html>
+
+My directory looks like:
+WebPage
+-> App_Data (for the database)
+-> MusicFiles (dir for music files)
+Default.aspx
