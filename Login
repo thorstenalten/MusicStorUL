@@ -201,3 +201,9 @@ public partial class _Default : System.Web.UI.Page
        
     }
 }
+
+-- EDIT by Thorsten
+// add this to loginPage whenever successfully logged in
+        Response.Cookies["loginInfo"]["isLoggedIn"] = "true";
+        Response.Cookies["loginInfo"]["username"] = username; // somehow get the user name and insert it here
+        // with this, on other pages we can then query this cookie using e.g. String value = Request.Cookies["loginInfo"]["isLoggedIn"];
