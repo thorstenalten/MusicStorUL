@@ -1,0 +1,88 @@
+The c# code outline for the SongInfoPage, just add your code in the right places
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+
+public partial class SongInfoPage : System.Web.UI.Page
+{
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        if (loggedIn()) // only show the page if user is logged in
+        {
+            if (!IsCallback)
+            {
+                // first time the page is loaded do ..
+                if (isOwnSongPage())
+                {
+                    // if the user is looking at the info page of a song they own things will be different than for others (e.g. edit buttons will be available and such)
+                }
+                else
+                {
+                    // if user is looking at the info page of a song they do not own (e.g. won't see edit button but instead things like 'Rate' and such)
+                    // First action would be to check whether current user is on the blacklist of the other user because this will affect whether things like 'Follow' and writing comments are enabled
+                    bool isBlacklisted = isOnBlacklist();
+                    // second action would be to check the commentable setting for the song (i.e. owner can say individual songs can't be commented on, this could be one of them and influences the user interface)
+                    bool isCommentable = isSetToCommentable();
+                }
+            }
+            else
+            {
+                // any additional time the page is loaded do ..
+            }
+        }
+        else
+        {
+            // if not logged in just show a big message "You do not have access to this site, please log in" and maybe a button redirecting to the login page
+            Response.Write("You do not have access to this site, please log in");
+        }
+    }
+
+    private bool loggedIn()
+    {
+        // check if user is logged in  (using cookie that was created upon login at loginPage)
+        if (Request.Cookies["loginInfo"] != null)
+        {
+            String loggedIn = Request.Cookies["loginInfo"]["isLoggedIn"];
+            loggedIn.ToLower();
+
+            if (loggedIn.Equals("true"))
+                return true;
+        }
+        
+        return false;
+    }
+    private bool isOwnSongPage()
+    {
+        // check if current user is on song info page of song they own 
+        //check database for that
+
+        String Owner = ""; //TODO
+
+        //query the login cookie for current user's name
+        String currentUser = Request.Cookies["loginInfo"]["username"];
+
+        if (Owner.Equals(currentUser))
+            return true;
+        return false;
+    }
+
+    private bool isOnBlacklist()
+    {
+        // check if current user is on blacklist of the song's owner
+        return false;
+    }
+
+    private bool isSetToCommentable()
+    {
+        // we will have been sent here by something like: Server.Transfer("SongInfoPage.aspx?song=id of song", true);
+        String songID = Request.QueryString["song"];
+        int SID = Convert.ToInt32(songID);
+        // TODO (check database using the SID we just accquired)
+        return false;
+    }
+
+}
