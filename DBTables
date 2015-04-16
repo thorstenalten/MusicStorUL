@@ -133,7 +133,11 @@ Primary Key: PID
 PID: unique numeric
 PName: String
 UID: unique numeric
-Content: songList
+
+playlistContent - the songs for each playlist
+Primary Key: PID & SID (sideeffect a song can only appear once in each playlist)
+PID: unique numeric
+SID: unique numeric
 
 settingsPlaylist – the Settings for a Playlist, such as whether it is public (as in, others can listen to it), whether it can be commented on if it is public (can’t comment on private anyway I suppose)
 Primary Key: PID
