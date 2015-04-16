@@ -1,0 +1,225 @@
+- html
+
+<%@ Page Language="C#" AutoEventWireup="true" CodeFile="MainPage.aspx.cs" Inherits="MainPage" %>
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title></title>
+</head>
+<body>
+
+    <header class="headers">
+    </header>
+    
+    <asp:Button ID="btnGoToLogin" runat="server" Text="Go To Login Page" Enabled="False" Visible="False" />
+
+    <form id="mainPart" runat="server">
+    <div>
+
+        <div id="allTheLinksAndButtonsAndStuff" runat="server">
+
+            <asp:Button ID="btnUpload" runat="server" Text="Upload Music" OnClick="btnUpload_Click" />
+            <br />
+            <asp:Button ID="btnDownload" runat="server" Text="Download Music" OnClick="btnDownload_Click" />
+            <br />
+            <asp:Button ID="btnDelete" runat="server" Text="Delete Music" OnClick="btnDelete_Click" />
+            <br />
+            <asp:Button ID="btnCreatePlaylist" runat="server" Text="Create Playlist" OnClick="btnCreatePlaylist_Click" />
+            <br />
+            <asp:Button ID="btnAllMusic" runat="server" Text="All Of Your Music" OnClick="btnAllMusic_Click" />
+            <br />
+
+            
+            <asp:Button ID="btnProfile" runat="server" Text="Profile" OnClick="btnProfile_Click" />
+            <asp:Image ID="imgProfile" runat="server" ImageUrl="imageURL" />
+            <br />
+
+
+        </div> <!-- end div allTheLinksAndButtonsAndStuff -->
+
+        <div id="musicPlayer" runat="server">
+
+            <asp:Label ID="lblAudioElement" runat="server" Text="Here be CrtSongName"></asp:Label> 
+            <br /> <!-- attention - if ye add something as source to the audioElement that is not a correct path to some file the audioElement will probably just flash once and disappear (at least in firefox it certainly does) -->
+            <audio id="audioElement" controls="controls" runat="server"> </audio>
+            
+            <asp:SqlDataSource ID="MusicPlayerDataSource" runat="server" ConnectionString="<%$ ConnectionStrings:ConnectionStringForMusicPlayer %>" SelectCommand="SELECT Song.SName, Song.SRC, Playlist.PName FROM Playlist INNER JOIN PlaylistContent ON Playlist.PID = PlaylistContent.PID INNER JOIN Song ON PlaylistContent.SID = Song.SID WHERE (Playlist.PID = 1)"></asp:SqlDataSource>
+            <br />
+            
+            <asp:Label ID="lblPlaylistHeader" runat="server" Text="Here be Playlistname"></asp:Label> 
+            <br />
+            <asp:ListBox ID="lbxPlaylist" runat="server" AutoPostBack="True" OnSelectedIndexChanged="lbxPlaylist_SelectedIndexChanged" DataSourceID="MusicPlayerDataSource" DataTextField="SName" DataValueField="SRC"></asp:ListBox>
+            <br />
+        </div> <!-- end div musicPlayer -->
+
+        <div id="commentSection" runat="server">
+
+            <!-- here be comment section -->
+
+        </div> <!-- end div commentSection -->
+        
+    </div>
+    </form>
+
+
+</body>
+</html>
+
+
+- c#
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data;
+using System.Data.SqlClient;
+
+public partial class MainPage : System.Web.UI.Page
+{
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        // testing with cookies
+        Response.Cookies["loginInfo"]["isLoggedIn"] = "true";
+        Response.Cookies["loginInfo"]["username"] = "admin"; // somehow get the user name and insert it here
+        // with this, on other pages we can then query this cookie using e.g. String value = Request.Cookies["loginInfo"]["isLoggedIn"];
+        //Response.Redirect("ProfilePage.aspx?profileOf=admin", true);
+
+        if (loggedIn()) // only show the page if user is logged in
+        {
+            if (!IsCallback) // first time the page is loaded do ..
+            {
+                if (isOwnMainPage()) // if the user is looking at the own main page 
+                {
+                    Response.Write("Welcome User on your own Main Page");
+                    // pull profilePic from database and add it to imgProfile.ImageUrl
+                    String currentUser = Request.Cookies["loginInfo"]["username"];
+
+                    SqlConnection conn = new SqlConnection("Data Source=(LocalDB)\\v11.0;AttachDbFilename=|DataDirectory|\\MusicStorDB.mdf;Integrated Security=True");
+                    SqlCommand cmd = new SqlCommand("SELECT userOptional.ProfilePicture FROM [User] INNER JOIN userOptional ON [User].UID = userOptional.UID WHERE ([User].UName = N'"+ currentUser +"')", conn);
+                    conn.Open();
+                    try
+                    {
+                        // get first cell of first returned row (using ExecuteScalar) - in this case there SHOULD only be a first cell of a single first row in the first place
+                        object resultPic = cmd.ExecuteScalar();
+                        if (resultPic != null) // if user has a profile picture
+                        {
+                            String picturePath = resultPic.ToString();
+                            imgProfile.ImageUrl = picturePath;
+                        }
+                        else // if resultPic is empty set default value, whatever that is
+                        {
+                            imgProfile.ImageUrl = "/ProfileImages/default.jpg";
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
+                    Response.Write("DONE");
+                    // TODO populate Comment Section with recent events (this is not the comment section where other users comment!)
+                }
+                else // if user is looking at another's main page (not allowed)
+                {
+                    Response.Write("You do not have access to this site, scherr dich!");
+                    mainPart.Attributes.Add("Disabled", ""); // adds the Attribute 'Disabled' to the div thus disabling everything it contains as well .. which is everything bedise footer header
+                    // to undo this use mainPart.Attributes.Remove("Disabled"); // this removes the Attribute by setting it to no value at all (not even empty)
+                }
+            }
+            else // any additional time the page is loaded do ..
+            {
+                // TODO not sure if we need to do anything here
+                //Response.Write("AGAIN! Welcome User on your own Main Page");
+            }
+        }
+        else // if not logged in
+        {
+            // just show a big message "You do not have access to this side, please log in" and maybe a button redirecting to the login page
+            Response.Write("You do not have access to this site, please log in");
+            // disable everything
+            mainPart.Attributes.Add("Disabled", ""); // adds the Attribute 'Disabled' to the div thus disabling everything it contains as well .. which is everything bedise footer header
+            // to undo this use mainPart.Attributes.Remove("Disabled"); // this removes the Attribute by setting it to no value at all (not even empty)
+            // show button that directs to loginPage
+
+        }
+    }
+
+
+    private bool loggedIn() // check if user is logged in  (using cookie that was created upon login at loginPage)
+    {
+        if (Request.Cookies["loginInfo"] != null)
+        {
+            String loggedIn = Request.Cookies["loginInfo"]["isLoggedIn"];
+            loggedIn.ToLower();
+
+            if (loggedIn.Equals("true"))
+                return true;
+        }
+        return false;
+    }
+
+    private bool isOwnMainPage() // check if current user is on own main page (i.e. whether requested user page includes same name as current user)
+    {
+        // we will have been sent here by something like: Server.Transfer("MainPage.aspx?profileOf=username", true);
+        String Owner = Request.QueryString["profileOf"];
+
+        if (Owner == null) // for testing because I may not have gotten here by Server.Transfer
+            Owner = "admin"; // for testing
+
+        //query the login cookie for current user's name
+        if (Request.Cookies["loginInfo"] != null)
+        {
+            String currentUser = Request.Cookies["loginInfo"]["username"];
+
+            if (Owner.Equals(currentUser))
+                return true;
+        }
+        return false;
+    }
+
+    protected void lbxPlaylist_SelectedIndexChanged(object sender, EventArgs e)
+    {
+        if (lbxPlaylist.SelectedItem != null)
+            lblPlaylistHeader.Text = "You selected: " + lbxPlaylist.SelectedItem.Value;
+        else
+            lblPlaylistHeader.Text = "Nothing selected?"; // can't happen in this case but if I put this on Page_Load it may possibly somehow .. I guess?
+
+        // real thing
+        audioElement.Attributes["src"] = lbxPlaylist.SelectedItem.Value;
+    }
+    protected void btnUpload_Click(object sender, EventArgs e)  // send the current user to his upload page
+    {
+        String currentUser = Request.Cookies["loginInfo"]["username"];
+        Response.Redirect("UploadPage.aspx?profileOf=currentUser", true);
+    }
+    protected void btnDownload_Click(object sender, EventArgs e)
+    {
+        String currentUser = Request.Cookies["loginInfo"]["username"];
+        Response.Redirect("DownloadPage.aspx?profileOf=currentUser", true);
+    }
+    protected void btnDelete_Click(object sender, EventArgs e)
+    {
+        String currentUser = Request.Cookies["loginInfo"]["username"];
+        Response.Redirect("DeletePage.aspx?profileOf=currentUser", true);
+    }
+    protected void btnCreatePlaylist_Click(object sender, EventArgs e)
+    {
+        String currentUser = Request.Cookies["loginInfo"]["username"];
+        // not sure where to send the user .. maybe EditPlaylistPage is also used for creating? I'd say so, but then I'd include a second variable saying goto the create section
+        Response.Redirect("EditPlaylistPage.aspx?profileOf=currentUser&intend=createNew", true);
+    }
+    protected void btnAllMusic_Click(object sender, EventArgs e)
+    {
+        String currentUser = Request.Cookies["loginInfo"]["username"];
+        Response.Redirect("MusicLibraryPage.aspx?profileOf=currentUser", true);
+    }
+    protected void btnProfile_Click(object sender, EventArgs e)
+    {
+        String currentUser = Request.Cookies["loginInfo"]["username"];
+        Response.Redirect("ProfilePage.aspx?profileOf=currentUser", true);
+    }
+}
