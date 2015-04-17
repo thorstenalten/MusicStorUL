@@ -1,0 +1,266 @@
+<%@ Page Language="C#" AutoEventWireup="true" CodeFile="ProfileEditPage.aspx.cs" Inherits="ProfileEditPage" %>
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>Edit Profile</title>
+    <link href="StyleSheet.css" rel="stylesheet" type="text/css" />
+    <link href="Profile.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <h1>MusicStorUL</h1>
+    <div id="header">
+        <asp:HyperLink ID="linkLogin" runat="server" NavigateUrl="~/LoginPage.aspx" Text="Login"></asp:HyperLink>
+        <asp:HyperLink ID="linkAboutPage" runat="server" NavigateUrl="~/AboutPage.aspx" Text="About"></asp:HyperLink>
+        </div>
+    <form id="form1" runat="server">
+   
+        <div id="ProfilePage">
+    <div id="LeftCol">
+        <div id="Photo">
+            <asp:Image runat="server" id="profileImage" Height="170px" Width="170px" />
+        </div>
+        <div id="ProfileOptions">
+
+
+            <asp:HyperLink ID="linkEditProfile" Text="Edit Profile" runat="server" NavigateURL="~/ProfileEditPage.aspx" Visible="False"/>
+            <br />
+            <asp:HyperLink ID="linkDeleteProfile" runat="server" Text="Delete Profile" Visible="False"/>
+        </div>
+    </div>
+
+    <div id="Info">
+        <p>
+            <strong>Username:</strong>
+            <span>
+                <asp:Label ID="lblUsername" runat="server" />
+            </span>
+        </p>
+        <p>
+            <strong>ID:</strong>
+            <span>
+                <asp:Label ID="lblID" runat="server" />
+            </span>
+        </p>
+        <p>
+            <strong>Edit DOB: (dd/mm/yyyy)</strong>
+            <span>
+                <asp:TextBox ID="txtDOB" runat="server" Width="141px" TextMode="DateTime" MaxLength="10" />
+            </span>
+            <asp:RegularExpressionValidator ID="RegularExpressionValidator1" runat="server"
+                 ErrorMessage="*Not a valid date." ControlToValidate="txtDOB" 
+                Width="393px" 
+                ValidationExpression="(^(((0[1-9]|[12][0-8])[\/](0[1-9]|1[012]))|((29|30|31)[\/](0[13578]|1[02]))|((29|30)[\/](0[4,6,9]|11)))[\/](19|[2-9][0-9])\d\d$)|(^29[\/]02[\/](19|[2-9][0-9])(00|04|08|12|16|20|24|28|32|36|40|44|48|52|56|60|64|68|72|76|80|84|88|92|96)$)"></asp:RegularExpressionValidator>
+        </p>
+        <p>
+            <strong>Edit Bio:</strong>
+            <span>
+                <asp:TextBox ID="txtBio" runat="server" Columns="70" Height="61px" Width="206px" TextMode="MultiLine"/>
+            </span>
+        </p>
+        <p>
+            <strong>Edit Profile Picture:</strong>
+            <span>
+                <asp:FileUpload ID="FileUpload1" runat="server" Width="212px" />
+            </span>
+        </p>
+
+        <p>
+            <strong>Theme:</strong>
+            <span>
+   
+           
+
+            <asp:RadioButtonList ID="RadioButtonList1" runat="server" Width="142px" RepeatDirection="Horizontal">
+                <asp:ListItem>Light</asp:ListItem>
+                <asp:ListItem>Dark</asp:ListItem>
+            </asp:RadioButtonList>
+   
+           
+
+            </span>
+        </p>
+
+        <p>
+            <strong>Allow users to follow you:</strong>
+            <span>
+               
+             <asp:CheckBox ID="checkBoxFollow" runat="server" />
+               
+             </span>
+            
+        </p>
+        <p>
+            <strong>Show email address:</strong>
+            <span>
+              
+             <asp:CheckBox ID="checkBoxEmail" runat="server" />
+              
+             </span>
+            
+        </p>
+        <p>
+            <strong>Allow users to comment on:
+                <br />
+                <br />Profile?
+                <br />Songs?
+                <br />PlayLists?
+            </strong>
+            <span>
+                <asp:CheckBox ID="checkBox1" runat="server" /><br />
+                <asp:CheckBox ID="checkBox2" runat="server" /><br />
+                <asp:CheckBox ID="checkBox3" runat="server" /><br />
+            </span>
+                </p>
+        <p>
+           <strong></strong>
+            <span>
+               <asp:Button id="btnSave" Text="Save" runat="server" OnClick="btnSave_Click" Font-Bold="True" />
+             </span>
+            
+        </p>
+        
+    </div>
+            </div>
+    <!-- Needed because other elements inside ProfilePage have floats -->
+    <div style="clear:both"></div>
+    </form>
+</body>
+</html>
+
+
+
+
+C#
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data;
+using System.Data.SqlClient;
+using System.IO;
+using System.Globalization;
+
+public partial class ProfileEditPage : System.Web.UI.Page
+{
+    
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        if (!IsPostBack)
+        {
+            if (loggedIn()) // only show the page if user is logged in
+            {
+                linkLogin.Text = "Logout";
+
+                String username = Request.Cookies["loginInfo"]["username"];
+                String uid = Request.Cookies["loginInfo"]["UID"];
+
+                lblUsername.Text = username;
+                lblID.Text = uid;
+                //if the bio isnt blank then set it from cookie from profile page
+                if (!Request.Cookies["profileInfo"]["bio"].Equals("empty"))
+                {
+                    txtBio.Text = Request.Cookies["profileInfo"]["bio"];
+                }
+                //set Image source to be same as profile page image
+                profileImage.ImageUrl = Request.Cookies["profileInfo"]["profilePicture"];
+
+                //if dob has been given set it from cookie else leave it blank
+                if (!Request.Cookies["profileInfo"]["DOB"].Equals("empty"))
+                {
+                    txtDOB.Text = Request.Cookies["profileInfo"]["DOB"];
+                }
+
+
+
+
+
+
+            }
+        }
+    }
+
+
+
+
+
+      private bool loggedIn() // check if user is logged in  (using cookie that was created upon login at loginPage)
+            {
+                if (Request.Cookies["loginInfo"] != null)
+                {
+                    String loggedIn = Request.Cookies["loginInfo"]["isLoggedIn"];
+                    loggedIn.ToLower();
+
+                    if (loggedIn.Equals("true"))
+                        return true;
+                }
+                return false;
+            }
+      protected void btnSave_Click(object sender, EventArgs e)
+      {
+
+            SqlConnection connection = new SqlConnection(@"Data Source=(LocalDB)\v11.0;AttachDBFilename=|DataDirectory|\MusicStorDB.mdf;Integrated Security=True");
+            String uid = Request.Cookies["loginInfo"]["UID"];
+            String sql = "UPDATE userOptional SET ProfilePicture = @ProfilePicture, DOB = @DOB,  Bio = @Bio WHERE (UID = @UID)";
+
+            String profilePicture;
+            String fileName = Path.GetFileName(FileUpload1.PostedFile.FileName);
+            //if user chooses to upload a file set profilePicture to be new filePath
+            if (!fileName.Equals(""))
+            {
+                Response.Write("file " + fileName);
+                //Save Profile picture to /ProfileImages
+                FileUpload1.SaveAs(Server.MapPath("/ProfileImages/" + fileName));
+                profilePicture = "/ProfileImages/" + fileName;
+            }
+            //if user does not choose to change picture keep filePath the same
+            else
+            {
+                profilePicture = Request.Cookies["profileInfo"]["ProfilePicture"];
+                Response.Write("RUP");
+
+            }
+            DateTime DOB;
+            if (!txtDOB.Text.Equals(""))
+            {
+                DOB = DateTime.ParseExact(txtDOB.Text, "dd/MM/yyyy", CultureInfo.InvariantCulture);
+                Response.Write(DOB);
+                Response.Cookies["profileInfo"]["dobGiven"] = "true";
+            }
+
+            else
+            {
+                DOB = DateTime.Now;
+            }
+          try
+              {
+                  connection.Open();
+                  SqlCommand cmd = new SqlCommand(sql, connection);
+                  cmd.Parameters.Add("@UID", SqlDbType.Int);
+                  cmd.Parameters["@UID"].Value = uid;
+                  
+                  cmd.Parameters.Add("@ProfilePicture", SqlDbType.VarChar);
+                  cmd.Parameters["@ProfilePicture"].Value = profilePicture;
+                  
+                  cmd.Parameters.Add("@DOB", SqlDbType.DateTime);
+                  cmd.Parameters["@DOB"].Value = DOB;
+                  
+                  cmd.Parameters.Add("@Bio", SqlDbType.VarChar);
+                  cmd.Parameters["@Bio"].Value = txtBio.Text;
+
+                  cmd.ExecuteNonQuery();
+                  connection.Close();
+              }
+              catch
+              {
+                  Response.Write("Error writing to database.");
+              }
+              //return user to profile page on successfull database update
+              Response.Redirect("ProfilePage.aspx");
+      }
+
+}
