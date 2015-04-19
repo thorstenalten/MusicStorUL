@@ -1,0 +1,17 @@
+Some major and minor things we need to get done before meeting Annette. 
+
+- Pretty much all pages are still missing header and footer
+- Delete Page -> everything done except the actual deletion from the database
+- Download Page -> everything done, but we're only simulating downloading the playlists (too much work to combine all songs and then send a big file to browser in the time left), downloading songs however works quite fine
+- About Page (this is easy, just put in some text talking about the site)
+- EditPlaylistPage -> not started yet, basic pattern is similar to Delete/Download page but someone needs to sit down and do this thing, it's used to both create and edit playlists
+- Login page -> done, at most we need to change the cookies a bit if it becomes necessary otherwise complete
+- MainPage -> halfway done, it links to all other pages, but I kicked out the player (and put it into MusicLibraryPage) still missing the comment section
+- MusicLibrary Page -> halfway done, lists all music of user with option to play, however, can't play playlists yet since I can't figure out how to refresh the listbox responsible
+- Profile+Edit Page -> done, except comments 
+- Register Page -> done I think
+- Song Info + Edit Page -> Will, what've you got?
+- Upload Page -> almost nothing done yet
+- we are missing the comment sections everywhere
+- we are missing css (except some rudimentary on profile)
+- we are missing test data in our database!
