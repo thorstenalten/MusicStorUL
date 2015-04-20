@@ -60,6 +60,7 @@ public partial class LoginPage : System.Web.UI.Page
     string loginValue;
     bool Valid;
     String cookieUsername;
+    Int32 cookieUID;
 
     protected void Page_Load(object sender, EventArgs e)
     {
@@ -96,7 +97,7 @@ public partial class LoginPage : System.Web.UI.Page
         cookieUsername = username;
 
         String sql = "SELECT * FROM Users where Uname = @username AND Password = @password";
-
+        String getUID = "SELECT UID FROM Users where Uname = @username";
         connection.Open();
         SqlCommand cmd = new SqlCommand(sql, connection);
         cmd.Parameters.Add("@username", SqlDbType.VarChar);
@@ -113,6 +114,15 @@ public partial class LoginPage : System.Web.UI.Page
         }
 
         connection.Close();
+        if (valid)
+        {
+            connection.Open();
+            SqlCommand getUIDCMD = new SqlCommand(getUID, connection);
+            getUIDCMD.Parameters.Add("@username", SqlDbType.VarChar);
+            getUIDCMD.Parameters["@username"].Value = username;
+            cookieUID = (Int32)getUIDCMD.ExecuteScalar();
+            connection.Close();
+        }
         return valid;
     }
 
@@ -123,6 +133,7 @@ public partial class LoginPage : System.Web.UI.Page
         bool valid = false;
         String[] parseID = email.Split('@');
         String id = parseID[0];
+        cookieUID = Convert.ToInt32(id);
 
         String sql = "SELECT * FROM Users where UID = @id AND Password = @password";
         String getUsername = "SELECT Uname FROM Users WHERE UID = @id";
@@ -144,13 +155,15 @@ public partial class LoginPage : System.Web.UI.Page
            
         }
         connection.Close();
-
-        connection.Open();
-        SqlCommand getUsernameCMD = new SqlCommand(getUsername, connection);
-        getUsernameCMD.Parameters.Add("@id", SqlDbType.VarChar);
-        getUsernameCMD.Parameters["@id"].Value = id;
-        cookieUsername = (String)getUsernameCMD.ExecuteScalar();
-        connection.Close();
+        if (valid)
+        {
+            connection.Open();
+            SqlCommand getUsernameCMD = new SqlCommand(getUsername, connection);
+            getUsernameCMD.Parameters.Add("@id", SqlDbType.VarChar);
+            getUsernameCMD.Parameters["@id"].Value = id;
+            cookieUsername = (String)getUsernameCMD.ExecuteScalar();
+            connection.Close();
+        }
         return valid;
     }
 
@@ -160,6 +173,7 @@ public partial class LoginPage : System.Web.UI.Page
         SqlDataReader reader;
         bool valid = false;
         int intID = Convert.ToInt32(id);
+        cookieUID = intID;
 
         String sql = "SELECT * FROM Users where UID = @intID AND Password = @password";
         String getUsername = "SELECT Uname FROM Users WHERE UID = @intID";
@@ -178,12 +192,15 @@ public partial class LoginPage : System.Web.UI.Page
             valid = true;
         }
         connection.Close();
-        connection.Open();
-        SqlCommand getUsernameCMD = new SqlCommand(getUsername, connection);
-        getUsernameCMD.Parameters.Add("@intID", SqlDbType.VarChar);
-        getUsernameCMD.Parameters["@intID"].Value = intID;
-        cookieUsername = (String)getUsernameCMD.ExecuteScalar();
-        connection.Close();
+        if (valid)
+        {
+            connection.Open();
+            SqlCommand getUsernameCMD = new SqlCommand(getUsername, connection);
+            getUsernameCMD.Parameters.Add("@intID", SqlDbType.VarChar);
+            getUsernameCMD.Parameters["@intID"].Value = intID;
+            cookieUsername = (String)getUsernameCMD.ExecuteScalar();
+            connection.Close();
+        }
         return valid;
     }
 
@@ -210,6 +227,8 @@ public partial class LoginPage : System.Web.UI.Page
         {
             Response.Cookies["loginInfo"]["isLoggedIn"] = "true";
             Response.Cookies["loginInfo"]["username"] = cookieUsername;
+            String cookieUIDString = Convert.ToString(cookieUID);
+            Response.Cookies["loginInfo"]["UID"] = cookieUIDString;
             Response.Redirect("MainPage.aspx");
 
         }
