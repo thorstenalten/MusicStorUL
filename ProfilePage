@@ -38,7 +38,7 @@
             </span>
         </p>
         <p>
-            <strong>ID:</strong>
+            <strong><asp:Label ID="showID" Text="ID:"  runat="server"/></strong>
             <span>
                 <asp:Label ID="lblID" runat="server" />
             </span>
@@ -55,22 +55,16 @@
                 <asp:Label ID="lblBio" runat="server" />
             </span>
         </p>
-        <p>
-            <strong>Theme:</strong>
-            <span>
-
-            <asp:RadioButtonList ID="RadioButtonList1" runat="server" Width="16px" RepeatDirection="Horizontal" Enabled="false" Height="16px">
-                <asp:ListItem>Light</asp:ListItem>
-                <asp:ListItem>Dark</asp:ListItem>
-            </asp:RadioButtonList>
-            </span>
-        </p>
 
         <p>
             <strong>Allow users to follow you:</strong>
             <span>
                
-             <asp:CheckBox ID="checkBoxFollow" runat="server" Enabled="false" Checked="true"/>
+             <asp:RadioButtonList ID="FollowSettings" runat="server" RepeatDirection="Vertical" Width="284px" Enabled="false">
+                <asp:ListItem Text ="Anyone can follow you." Enabled="true" Value="1" ></asp:ListItem>
+                <asp:ListItem Text="Users must ask to follow you." Enabled="true" Value="0" ></asp:ListItem>
+                <asp:ListItem Text="Nobody can follow you." Enabled="true" Value="-1" ></asp:ListItem>
+                </asp:RadioButtonList>
                
              </span>
             
@@ -106,85 +100,6 @@
 </html>
 
 
-
-CSS file to give layout:
-
-
-#ProfilePage
-{
-    /* Move it off the top of the page, then centre it horizontally */
-    margin: 50px auto;
-    width: 635px;
-
-
-}
-
-#LeftCol
-{
-    /* Move it to the left */
-    float: left;
-
-    width: 200px;
-    text-align: center;
-
-    /* Move it away from the content */
-    margin-right: 20px;
-
-
-}
-
-#Photo
-{
-    /* Width and height of photo container */
-    width: 200px;
-    height: 200px;
-
-
-}
-
-#PhotoOptions
-{
-    text-align: center;
-    width: 200px;
-
-
-}
-
-#Info
-{
-    width: 405px;
-    text-align: left;
-
-    /* Move it to the right */
-    float: right;
-    height: 252px;
-}
-
-#Info strong
-{
-    /* Give it a width */
-    display: inline-block;
-    width: 166px;
-
-
-}
-
-#Info span
-{
-    /* Give it a width */
-    display: inline-block;
-    width: 148px;
-}
-
-strong{
-    text-align:left;
-}
-
-span{
-    text-align:justify;
-}
-
-
 C#
 
 
@@ -212,11 +127,12 @@ public partial class ProfilePage : System.Web.UI.Page
                     linkDeleteProfile.Visible = true;
                     string username = Request.Cookies["loginInfo"]["username"];
                     string uid = Request.Cookies["loginInfo"]["UID"];
-                    DateTime dob = new DateTime(1000, 01, 01);
+                    DateTime dob = new DateTime(1800, 01, 01);
                     DateTime now;
                     string bio = "";
                     string cookieBio;
                     string cookieDOB;
+                    String followSettings = "1";
                     SqlConnection connection = new SqlConnection(@"Data Source=(LocalDB)\v11.0;AttachDBFilename=|DataDirectory|\MusicStorDB.mdf;Integrated Security=True");
                     SqlDataReader reader;
                     String sql = "Select * from userOptional JOIN settingsUser ON userOptional.UID = settingsUser.UID";
@@ -237,18 +153,27 @@ public partial class ProfilePage : System.Web.UI.Page
                         if (!(reader["DOB"] is DBNull))
                         {
                             dob = Convert.ToDateTime(reader["DOB"]);
+                            Response.Cookies["profileInfo"]["dob"] = dob.ToString("dd'/'MM'/'yyyy");
                         }
 
 
                         if (!reader["EmailPrivacy"].ToString().Equals("True"))
                         {
                             checkBoxEmail.Checked = false;
+                            showID.Visible = false;
+                            lblID.Visible = false;
                         }
-                        
+                        else
+                        {
+                            showID.Visible = true;
+                            lblID.Visible = true;
+                        }
+                       
 
                         if (!reader["ProfileCommentable"].ToString().Equals("True"))
                         {
                             checkBoxProfile.Checked = false;
+                            
                         }
 
                         if (!reader["SongCommentable"].ToString().Equals("True"))
@@ -260,12 +185,20 @@ public partial class ProfilePage : System.Web.UI.Page
                         {
                             checkBoxPlaylist.Checked = false;
                         }
+
+                        followSettings = reader["Followable"].ToString();
+                        FollowSettings.SelectedValue = followSettings;
                     }
                     else
                         cookieBio = "empty";
 
+                    Response.Cookies["profileInfo"]["emailPrivacy"] = reader["EmailPrivacy"].ToString();
+                    Response.Cookies["profileInfo"]["profileCommentable"] = reader["ProfileCommentable"].ToString();
+                    Response.Cookies["profileInfo"]["playlistCommentable"] = reader["PlaylistCommentable"].ToString();
+                    Response.Cookies["profileInfo"]["songCommentable"] = reader["SongCommentable"].ToString();
+                    Response.Cookies["profileInfo"]["followSettings"] = followSettings;
                     connection.Close();
-                    if (dob.Year != 1000)
+                    if (dob.Year != 1800)
                     {
                         DateTime zeroTime = new DateTime(1, 1, 1);
 
@@ -294,6 +227,7 @@ public partial class ProfilePage : System.Web.UI.Page
                     Response.Cookies["profileInfo"]["DOB"] = cookieDOB;
                     Response.Cookies["profileInfo"]["bio"] = cookieBio;
                     Response.Cookies["profileInfo"]["profilePicture"] = imagePath;
+      
                     
                 }
 
@@ -360,15 +294,7 @@ public partial class ProfilePage : System.Web.UI.Page
 
     private void onLogout()
         {
-            Response.Cookies["loginInfo"]["isLoggedIn"] = "false";
-            Response.Cookies["profileInfo"]["Bio"] = "";
-            Response.Cookies["profileInfo"]["dob"] = "";
-            Response.Cookies["profileInfo"]["profilePicture"] = "";
-
             
         }
 }
-
-
-
 
