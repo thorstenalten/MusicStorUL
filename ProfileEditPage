@@ -67,27 +67,15 @@
         </p>
 
         <p>
-            <strong>Theme:</strong>
-            <span>
-   
-           
-
-            <asp:RadioButtonList ID="RadioButtonList1" runat="server" Width="142px" RepeatDirection="Horizontal">
-                <asp:ListItem>Light</asp:ListItem>
-                <asp:ListItem>Dark</asp:ListItem>
-            </asp:RadioButtonList>
-   
-           
-
-            </span>
-        </p>
-
-        <p>
             <strong>Allow users to follow you:</strong>
             <span>
                
-             <asp:CheckBox ID="checkBoxFollow" runat="server" />
-               
+            <asp:RadioButtonList ID="FollowSettings" runat="server" RepeatDirection="Vertical" Width="284px">
+                <asp:ListItem Text ="Anyone can follow you." Enabled="true" Value="1" Selected="True" ></asp:ListItem>
+                <asp:ListItem Text="Users must ask to follow you." Enabled="true" Value="0"></asp:ListItem>
+                <asp:ListItem Text="Nobody can follow you." Enabled="true" Value="-1"></asp:ListItem>
+                </asp:RadioButtonList>
+                <asp:Label ID="test" runat="server" />
              </span>
             
         </p>
@@ -95,7 +83,7 @@
             <strong>Show email address:</strong>
             <span>
               
-             <asp:CheckBox ID="checkBoxEmail" runat="server" />
+             <asp:CheckBox ID="checkBoxEmail" runat="server" Checked="true" />
               
              </span>
             
@@ -108,9 +96,9 @@
                 <br />PlayLists?
             </strong>
             <span>
-                <asp:CheckBox ID="checkBox1" runat="server" /><br />
-                <asp:CheckBox ID="checkBox2" runat="server" /><br />
-                <asp:CheckBox ID="checkBox3" runat="server" /><br />
+                <asp:CheckBox ID="checkBoxProfile" runat="server" Checked="true"/><br />
+                <asp:CheckBox ID="checkBoxSong" runat="server" Checked="true"/><br />
+                <asp:CheckBox ID="checkBoxPlaylist" runat="server"  Checked="true"/><br />
             </span>
                 </p>
         <p>
@@ -128,6 +116,9 @@
     </form>
 </body>
 </html>
+
+
+
 
 
 
@@ -169,17 +160,34 @@ public partial class ProfileEditPage : System.Web.UI.Page
                 //set Image source to be same as profile page image
                 profileImage.ImageUrl = Request.Cookies["profileInfo"]["profilePicture"];
 
+                if (!Request.Cookies["profileInfo"]["emailPrivacy"].Equals("True"))
+                {
+                    checkBoxEmail.Checked = false;
+                }
                 //if dob has been given set it from cookie else leave it blank
                 if (!Request.Cookies["profileInfo"]["DOB"].Equals("empty"))
                 {
                     txtDOB.Text = Request.Cookies["profileInfo"]["DOB"];
                 }
 
+                if (!Request.Cookies["profileInfo"]["profileCommentable"].Equals("True")) 
+                {
+                    checkBoxProfile.Checked = false;
+                }
+
+                if (!Request.Cookies["profileInfo"]["songCommentable"].Equals("True"))
+                {
+                    checkBoxSong.Checked = false;
+                }
+
+                if (!Request.Cookies["profileInfo"]["playlistCommentable"].Equals("True"))
+                {
+                    checkBoxPlaylist.Checked = false;
+                }
 
 
-
-
-
+                //if(Request.Cookies["profileInfo"]["followSettings"] == "1")
+                
             }
         }
     }
@@ -205,14 +213,20 @@ public partial class ProfileEditPage : System.Web.UI.Page
 
             SqlConnection connection = new SqlConnection(@"Data Source=(LocalDB)\v11.0;AttachDBFilename=|DataDirectory|\MusicStorDB.mdf;Integrated Security=True");
             String uid = Request.Cookies["loginInfo"]["UID"];
-            String sql = "UPDATE userOptional SET ProfilePicture = @ProfilePicture, DOB = @DOB,  Bio = @Bio WHERE (UID = @UID)";
-
+            String sqlUserOptional = "UPDATE userOptional SET ProfilePicture = @ProfilePicture, DOB = @DOB,  Bio = @Bio WHERE (UID = @UID)";
+            String sqlSettingsUser = "UPDATE settingsUser SET Followable = @followable, EmailPrivacy = @emailPrivacy, ProfileCommentable = @profileCommentable," +
+                                      "SongCommentable = @songCommentable, PlaylistCommentable = @playlistCommentable";
             String profilePicture;
             String fileName = Path.GetFileName(FileUpload1.PostedFile.FileName);
+            String emailPrivacy = "False";
+            String profileCommentable = "False";
+            String songCommentable = "False";
+            String playlistCommentable = "False";
+            int followable = Convert.ToInt32(FollowSettings.SelectedValue);
+
             //if user chooses to upload a file set profilePicture to be new filePath
             if (!fileName.Equals(""))
             {
-                Response.Write("file " + fileName);
                 //Save Profile picture to /ProfileImages
                 FileUpload1.SaveAs(Server.MapPath("/ProfileImages/" + fileName));
                 profilePicture = "/ProfileImages/" + fileName;
@@ -220,26 +234,44 @@ public partial class ProfileEditPage : System.Web.UI.Page
             //if user does not choose to change picture keep filePath the same
             else
             {
-                profilePicture = Request.Cookies["profileInfo"]["ProfilePicture"];
-                Response.Write("RUP");
+                profilePicture = Request.Cookies["profileInfo"]["profilePicture"];
 
             }
             DateTime DOB;
-            if (!txtDOB.Text.Equals(""))
+            if (!string.IsNullOrWhiteSpace(txtDOB.Text))
             {
                 DOB = DateTime.ParseExact(txtDOB.Text, "dd/MM/yyyy", CultureInfo.InvariantCulture);
-                Response.Write(DOB);
-                Response.Cookies["profileInfo"]["dobGiven"] = "true";
             }
 
             else
             {
-                DOB = DateTime.Now;
+                DOB = new DateTime(1800, 01, 01);
             }
+
+          if(checkBoxEmail.Checked == true)
+          {
+              emailPrivacy = "True";
+          }
+
+          if (checkBoxProfile.Checked == true)
+          {
+              profileCommentable = "True";
+          }
+
+          if (checkBoxSong.Checked == true)
+          {
+              songCommentable = "True";
+          }
+
+          if (checkBoxPlaylist.Checked == true)
+          {
+              playlistCommentable = "True";
+          }
+
           try
-              {
+             {
                   connection.Open();
-                  SqlCommand cmd = new SqlCommand(sql, connection);
+                  SqlCommand cmd = new SqlCommand(sqlUserOptional, connection);
                   cmd.Parameters.Add("@UID", SqlDbType.Int);
                   cmd.Parameters["@UID"].Value = uid;
                   
@@ -254,12 +286,32 @@ public partial class ProfileEditPage : System.Web.UI.Page
 
                   cmd.ExecuteNonQuery();
                   connection.Close();
+
+                  connection.Open();
+                  SqlCommand cmdSettings = new SqlCommand(sqlSettingsUser, connection);
+                  cmdSettings.Parameters.Add("@emailPrivacy", SqlDbType.Bit);
+                  cmdSettings.Parameters["@emailPrivacy"].Value = emailPrivacy;
+
+                  cmdSettings.Parameters.Add("@profileCommentable", SqlDbType.Bit);
+                  cmdSettings.Parameters["@profileCommentable"].Value = profileCommentable;
+
+                  cmdSettings.Parameters.Add("@songCommentable", SqlDbType.Bit);
+                  cmdSettings.Parameters["@songCommentable"].Value = songCommentable;
+
+                  cmdSettings.Parameters.Add("@playlistCommentable", SqlDbType.Bit);
+                  cmdSettings.Parameters["@playlistCommentable"].Value = playlistCommentable;
+
+                  cmdSettings.Parameters.Add("@followable", SqlDbType.Int);
+                  cmdSettings.Parameters["@followable"].Value = followable;
+                  cmdSettings.ExecuteNonQuery();
+                  connection.Close();
+
               }
               catch
               {
                   Response.Write("Error writing to database.");
               }
-              //return user to profile page on successfull database update
+              //return user to profile page on successful database update
               Response.Redirect("ProfilePage.aspx");
       }
 
