@@ -103,19 +103,19 @@ using System.Data.SqlClient;
 using System.Configuration;
 using System.Text.RegularExpressions;
 
-public partial class _Default : System.Web.UI.Page
-{
 
+public partial class RegisterPage : System.Web.UI.Page
+{
     protected void Page_Load(object sender, EventArgs e)
     {
-        
+
     }
 
     protected void btnRegister_Click(object sender, EventArgs e)
     {
         if (IsValid)
         {
-            SqlConnection connection = new SqlConnection(@"Data Source=(LocalDB)\v11.0;AttachDbFilename=|DataDirectory|\Database.mdf;Integrated Security=True");
+            SqlConnection connection = new SqlConnection(@"Data Source=(LocalDB)\v11.0;AttachDBFilename=|DataDirectory|\MusicStorDB.mdf;Integrated Security=True");
             string[] splitID = txtEmail.Text.Split('@');
             string UID = splitID[0];
             string username = txtUsername.Text;
@@ -127,11 +127,13 @@ public partial class _Default : System.Web.UI.Page
             if (String.IsNullOrEmpty(backupEmail))
             {
                 backupEmailPresent = false;
-                sql = "INSERT INTO Users VALUES(@UID, @Username, @Password, NULL)";
+                sql = "INSERT INTO Users VALUES(@UID, @Username, @Password, NULL) INSERT INTO userOptional VALUES(@UID, NULL, NULL, NULL)" +
+                        "INSERT INTO settingsUser VALUES (@UID, DEFAULT, DEFAULT, DEFAULT, DEFAULT, DEFAULT, DEFAULT)";
             }
 
             else
-                sql = "INSERT INTO Users VALUES(@UID, @Username, @Password, @BackupEmail)";
+                sql = "INSERT INTO Users VALUES(@UID, @Username, @Password, @BackupEmail) INSERT INTO userOptional VALUES(@UID, NULL, NULL ,NULL)" +
+                        "INSERT INTO settingsUser VALUES(@UID, DEFAULT, DEFAULT, DEFAULT, DEFAULT, DEFAULT, DEFAULT)";
 
             //if there is an error with the data it will catch the exception and display an error
             try
@@ -152,27 +154,28 @@ public partial class _Default : System.Web.UI.Page
                     command.Parameters.Add("@BackupEmail", SqlDbType.VarChar);
                     command.Parameters["@BackupEmail"].Value = backupEmail;
                 }
-                
+
                 command.ExecuteNonQuery();
                 connection.Close();
                 //email is not actually sent, we're just saying it is
                 lblSuccess.Text = "An email with a verification link has been sent to your account!";
+                Response.Cookies["profileInfo"]["dobGiven"] = "false";
             }
             catch
             {
                 Response.Write("Error writing to database.");
             }
-
+            
         }
-        
+
     }
-    protected void UsernameValidate (object sender, ServerValidateEventArgs args)
+    protected void UsernameValidate(object sender, ServerValidateEventArgs args)
     {
-      //need to run check here to see if username is already in the database
-        SqlConnection connection = new SqlConnection(@"Data Source=(LocalDB)\v11.0;AttachDbFilename=|DataDirectory|\Database.mdf;Integrated Security=True");
+        //need to run check here to see if username is already in the database
+        SqlConnection connection = new SqlConnection(@"Data Source=(LocalDB)\v11.0;AttachDBFilename=|DataDirectory|\MusicStorDB.mdf;Integrated Security=True");
         SqlDataReader reader;
         String argsString = args.Value;
-        string sql = "SELECT Uname FROM Users where Uname = @argsString";
+        string sql = "SELECT Uname FROM Users WHERE Uname = @argsString";
 
         connection.Open();
         SqlCommand cmd = new SqlCommand(sql, connection);
@@ -181,7 +184,7 @@ public partial class _Default : System.Web.UI.Page
 
         reader = cmd.ExecuteReader();
 
-        if(!reader.HasRows)
+        if (!reader.HasRows)
         {
             args.IsValid = true;
         }
@@ -196,11 +199,11 @@ public partial class _Default : System.Web.UI.Page
 
     }
 
-    protected void IDValidate (object sender, ServerValidateEventArgs args)
+    protected void IDValidate(object sender, ServerValidateEventArgs args)
     {
-        SqlConnection connection = new SqlConnection(@"Data Source=(LocalDB)\v11.0;AttachDbFilename=|DataDirectory|\Database.mdf;Integrated Security=True");
+        SqlConnection connection = new SqlConnection(@"Data Source=(LocalDB)\v11.0;AttachDBFilename=|DataDirectory|\MusicStorDB.mdf;Integrated Security=True");
         SqlDataReader reader;
-        String [] argsString = args.Value.Split('@');
+        String[] argsString = args.Value.Split('@');
         String argsValue = argsString[0];
         string sql = "SELECT UID FROM Users where UID = @argsValue";
 
@@ -226,8 +229,9 @@ public partial class _Default : System.Web.UI.Page
     }
     protected void txtEmail_TextChanged(object sender, EventArgs e)
     {
-        string [] idCheck = txtEmail.Text.Split('@');
+        string[] idCheck = txtEmail.Text.Split('@');
         string id = idCheck[0];
         //run check annette talked about to see if given ID is actually real/valid
     }
+
 }

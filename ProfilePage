@@ -1,28 +1,107 @@
-Comment: Try it out by calling the following from some other page:
-Response.Cookies["loginInfo"]["isLoggedIn"] = "true";
-Response.Cookies["loginInfo"]["username"] = "admin"; 
-Server.Transfer("ProfilePage.aspx?profileOf=admin", true);
-
--- html code
-
 <%@ Page Language="C#" AutoEventWireup="true" CodeFile="ProfilePage.aspx.cs" Inherits="ProfilePage" %>
 
 <!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head runat="server">
-    <title></title>
+    <title>Profile</title>
+    <link href="StyleSheet.css" rel="stylesheet" type="text/css" />
+    <link href="Profile.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
-    <form id="form1" runat="server">
-    <div>
-        <asp:Label ID="Label1" runat="server" Text="Label">ProfilePage</asp:Label>
+    <h1>MusicStorUL</h1>
+    <div id="header">
+        <asp:HyperLink ID="linkLogin" runat="server" NavigateUrl="~/LoginPage.aspx" Text="Login"></asp:HyperLink>
+        <asp:HyperLink ID="linkAboutPage" runat="server" NavigateUrl="~/AboutPage.aspx" Text="About"></asp:HyperLink>
     </div>
+    <form id="form1" runat="server">
+   
+        <div id="ProfilePage">
+    <div id="LeftCol">
+        <div id="Photo">
+            <asp:Image id="profileImage" runat="server" Height="170px" Width="170px" />
+        </div>
+        <div id="ProfileOptions">
+            <asp:HyperLink ID="linkEditProfile" Text="Edit Profile" runat="server" NavigateURL="~/ProfileEditPage.aspx" Visible="False"/>
+            <br />
+            <asp:HyperLink ID="linkDeleteProfile" runat="server" Text="Delete Profile" Visible="False"/>
+            <br />
+            <asp:HyperLink ID="linkFollowUser" runat="server" Text="Follow User" Visible="False"/>
+        </div>
+    </div>
+
+    <div id="Info">
+        <p>
+            <strong>Username:</strong>
+            <span>
+                <asp:Label ID="lblUsername" runat="server" />
+            </span>
+        </p>
+        <p>
+            <strong><asp:Label ID="showID" Text="ID:"  runat="server"/></strong>
+            <span>
+                <asp:Label ID="lblID" runat="server" />
+            </span>
+        </p>
+        <p>
+            <strong>Age:</strong>
+            <span>
+                <asp:Label ID="lblAge" runat="server" />
+            </span>
+        </p>
+        <p>
+            <strong>Bio:</strong>
+            <span>
+                <asp:Label ID="lblBio" runat="server" />
+            </span>
+        </p>
+
+        <p>
+            <strong>Allow users to follow you:</strong>
+            <span>
+               
+             <asp:RadioButtonList ID="FollowSettings" runat="server" RepeatDirection="Vertical" Width="284px" Enabled="false">
+                <asp:ListItem Text ="Anyone can follow you." Enabled="true" Value="1" ></asp:ListItem>
+                <asp:ListItem Text="Users must ask to follow you." Enabled="true" Value="0" ></asp:ListItem>
+                <asp:ListItem Text="Nobody can follow you." Enabled="true" Value="-1" ></asp:ListItem>
+                </asp:RadioButtonList>
+               
+             </span>
+            
+        </p>
+        <p>
+            <strong>Show email address:</strong>
+            <span>
+              
+             <asp:CheckBox ID="checkBoxEmail" runat="server" Enabled="false" Checked="true"/>
+              
+             </span>
+            
+        </p>
+        <p>
+            <strong>Allow users to comment on:
+                <br />
+                <br />Profile?
+                <br />Songs?
+                <br />PlayLists?
+            </strong>
+            <span>
+                <asp:CheckBox ID="checkBoxProfile" runat="server" Enabled="false" Checked="true"/><br />
+                <asp:CheckBox ID="checkBoxSong" runat="server" Enabled="false" Checked="true"/><br />
+                <asp:CheckBox ID="checkBoxPlaylist" runat="server" Enabled="false" Checked="true"/><br />
+            </span>
+                </p>
+    </div>
+</div>
+    <!-- Needed because other elements inside ProfilePage have floats -->
+    <div style="clear:both"></div>
     </form>
 </body>
 </html>
 
--- c#
+
+C#
+
 
 using System;
 using System.Collections.Generic;
@@ -30,6 +109,8 @@ using System.Linq;
 using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
+using System.Data.SqlClient;
+using System.Data;
 
 public partial class ProfilePage : System.Web.UI.Page
 {
@@ -37,28 +118,137 @@ public partial class ProfilePage : System.Web.UI.Page
     {
         if (loggedIn()) // only show the page if user is logged in
         {
+            linkLogin.Text = "Logout";
             if (!IsCallback) // first time the page is loaded do ..
             {
                 if (isOwnProfilePage()) // if the user is looking at the own profile page things will be different than for others (e.g. edit buttons will be available and such)
                 {
-                    Label1.Text = "Welcome User on your own Profile Page";
+                    linkEditProfile.Visible = true;
+                    linkDeleteProfile.Visible = true;
+                    string username = Request.Cookies["loginInfo"]["username"];
+                    string uid = Request.Cookies["loginInfo"]["UID"];
+                    DateTime dob = new DateTime(1800, 01, 01);
+                    DateTime now;
+                    string bio = "";
+                    string cookieBio;
+                    string cookieDOB;
+                    String followSettings = "1";
+                    SqlConnection connection = new SqlConnection(@"Data Source=(LocalDB)\v11.0;AttachDBFilename=|DataDirectory|\MusicStorDB.mdf;Integrated Security=True");
+                    SqlDataReader reader;
+                    String sql = "Select * from userOptional JOIN settingsUser ON userOptional.UID = settingsUser.UID";
+                    String imagePath ="";
+                    connection.Open();
+                    SqlCommand cmd = new SqlCommand(sql, connection);
+                    cmd.Parameters.Add("@uid", SqlDbType.VarChar);
+                    cmd.Parameters["@uid"].Value = uid;
+
+                    reader = cmd.ExecuteReader();
+                    //set cookieBio to pass text through to textbox on editProfile page
+                    if (reader.Read())
+                    {
+                        bio = reader["Bio"].ToString();
+                        imagePath = reader["ProfilePicture"].ToString();
+                        cookieBio = bio;
+
+                        if (!(reader["DOB"] is DBNull))
+                        {
+                            dob = Convert.ToDateTime(reader["DOB"]);
+                            Response.Cookies["profileInfo"]["dob"] = dob.ToString("dd'/'MM'/'yyyy");
+                        }
+
+
+                        if (!reader["EmailPrivacy"].ToString().Equals("True"))
+                        {
+                            checkBoxEmail.Checked = false;
+                            showID.Visible = false;
+                            lblID.Visible = false;
+                        }
+                        else
+                        {
+                            showID.Visible = true;
+                            lblID.Visible = true;
+                        }
+                       
+
+                        if (!reader["ProfileCommentable"].ToString().Equals("True"))
+                        {
+                            checkBoxProfile.Checked = false;
+                            
+                        }
+
+                        if (!reader["SongCommentable"].ToString().Equals("True"))
+                        {
+                            checkBoxSong.Checked = false;
+                        }
+
+                        if (!reader["PlaylistCommentable"].ToString().Equals("True"))
+                        {
+                            checkBoxPlaylist.Checked = false;
+                        }
+
+                        followSettings = reader["Followable"].ToString();
+                        FollowSettings.SelectedValue = followSettings;
+                    }
+                    else
+                        cookieBio = "empty";
+
+                    Response.Cookies["profileInfo"]["emailPrivacy"] = reader["EmailPrivacy"].ToString();
+                    Response.Cookies["profileInfo"]["profileCommentable"] = reader["ProfileCommentable"].ToString();
+                    Response.Cookies["profileInfo"]["playlistCommentable"] = reader["PlaylistCommentable"].ToString();
+                    Response.Cookies["profileInfo"]["songCommentable"] = reader["SongCommentable"].ToString();
+                    Response.Cookies["profileInfo"]["followSettings"] = followSettings;
+                    connection.Close();
+                    if (dob.Year != 1800)
+                    {
+                        DateTime zeroTime = new DateTime(1, 1, 1);
+
+
+                        now = DateTime.Now;
+
+                        TimeSpan span = now - dob;
+                        // because we start at year 1 for the Gregorian 
+                        // calendar, we must subtract a year here.
+                        int years = (zeroTime + span).Year - 1;
+
+                        // 1, where my other algorithm resulted in 0.
+                        lblAge.Text = Convert.ToString(years);
+                        cookieDOB = dob.ToString("dd/MM/yyyy");
+                    }
+
+                    else
+                    {
+                        lblAge.Text = "N/A";
+                        cookieDOB = "empty";
+                    }
+                    lblUsername.Text = username;
+                    lblBio.Text = bio;
+                    lblID.Text = uid;
+                    profileImage.ImageUrl = imagePath;
+                    Response.Cookies["profileInfo"]["DOB"] = cookieDOB;
+                    Response.Cookies["profileInfo"]["bio"] = cookieBio;
+                    Response.Cookies["profileInfo"]["profilePicture"] = imagePath;
+      
+                    
                 }
+
                 else // if user is looking at another's profile page (e.g. won't see edit button but instead things like 'Follow user' and such)
                 {
                     // First action would be to check whether current user is on the blacklist of the other user because this will affect whether things like 'Follow' and writing comments are enabled
                     if (!isBlacklisted()) // if not on Blacklist
                     {
-                        Label1.Text = "Welcome User on another's Profile Page";
+                        //Label1.Text = "Welcome User on another's Profile Page";
+                        linkFollowUser.Visible = true;
                     }
                     else // if on Blacklist
                     {
-                        Label1.Text = "This user blocked you.";
+                        //Label1.Text = "This user blocked you.";
                     }
                 }
             }
+
             else // any additional time the page is loaded do ..
             {
-                Label1.Text = "AGAIN! Welcome User on your own Profile Page";
+                //Label1.Text = "AGAIN! Welcome User on your own Profile Page";
             }
         }
         else // if not logged in
@@ -66,40 +256,45 @@ public partial class ProfilePage : System.Web.UI.Page
             // just show a big message "You do not have access to this side, please log in" and maybe a button redirecting to the login page
             Response.Write("You do not have access to this site, please log in");
         }
+    }
         
-    }
+         private bool loggedIn() // check if user is logged in  (using cookie that was created upon login at loginPage)
+            {
+                if (Request.Cookies["loginInfo"] != null)
+                {
+                    String loggedIn = Request.Cookies["loginInfo"]["isLoggedIn"];
+                    loggedIn.ToLower();
 
+                    if (loggedIn.Equals("true"))
+                        return true;
+                }
+                return false;
+            }
 
-    private bool loggedIn() // check if user is logged in  (using cookie that was created upon login at loginPage)
-    {
-        if (Request.Cookies["loginInfo"] != null)
+        private bool isOwnProfilePage() // check if current user is on own profile page (i.e. whether requested user page includes same name as current user)
         {
-            String loggedIn = Request.Cookies["loginInfo"]["isLoggedIn"];
-            loggedIn.ToLower();
+            // we will have been sent here by something like: Server.Transfer("ProfilePage.aspx?profileOf=username", true);
+            String Owner = Request.QueryString["profileOf"];
 
-            if (loggedIn.Equals("true"))
-                return true;
+            //query the login cookie for current user's name
+            if (Request.Cookies["loginInfo"] != null)
+            {
+                String currentUser = Request.Cookies["loginInfo"]["username"];
+
+                //if (Owner.Equals(currentUser))
+                   // return true;
+            }
+            return true ;
         }
-        return false;
-    }
-    private bool isOwnProfilePage() // check if current user is on own profile page (i.e. whether requested user page includes same name as current user)
-    {
-        // we will have been sent here by something like: Server.Transfer("ProfilePage.aspx?profileOf=username", true);
-        String Owner = Request.QueryString["profileOf"];
 
-        //query the login cookie for current user's name
-        if (Request.Cookies["loginInfo"] != null)
+        private bool isBlacklisted() // TODO // check if current user is on blacklist of the ProfilePage's user
         {
-            String currentUser = Request.Cookies["loginInfo"]["username"];
-
-            if (Owner.Equals(currentUser))
-                return true;
+            return false;
         }
-        return false;
-    }
 
-    private bool isBlacklisted() // TODO // check if current user is on blacklist of the ProfilePage's user
-    {
-        return false;
-    }
+    private void onLogout()
+        {
+            
+        }
 }
+
