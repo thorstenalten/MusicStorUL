@@ -1,0 +1,22 @@
+Example by INSERT command
+
+- c#
+
+SqlConnection myConnection = new SqlConnection();
+            // say where to connect to
+            myConnection.ConnectionString = "Data Source=(LocalDB)\\v11.0;AttachDbFilename=|DataDirectory|\\Database.mdf;Integrated Security=True";
+
+            String insertOrder = "INSERT INTO Item (itemName, itemDescription) VALUES (@itemName, @itemDescription)";
+
+            SqlCommand myCommand = new SqlCommand(insertOrder, myConnection);
+            myCommand.Parameters.Add("@itemName", SqlDbType.NVarChar).Value = itemName;
+            myCommand.Parameters.Add("@itemDescription", SqlDbType.NVarChar).Value = itemDescription; // actually nvarchar(50) and nvarchar(MAX)
+
+            myCommand.Connection.Open();
+            myCommand.ExecuteNonQuery();
+            myConnection.Close();
+            myConnection.Dispose();
+
+            // refresh Item datasource and grid
+            ItemDataSource.Update();
+            gdvItem.DataBind();
