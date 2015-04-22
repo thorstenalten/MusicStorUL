@@ -1,0 +1,141 @@
+<%@ Page Language="C#" AutoEventWireup="true" CodeFile="ViewPlaylists.aspx.cs" Inherits="ViewPlaylists" %>
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>Playlists</title>
+    <link href="StyleSheet.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <h1>MusicStorUL</h1>
+    <header class="headers"><asp:HyperLink ID="linkProfile" Text="Profile" runat="server" NavigateUrl="~/ProfilePage.aspx" />
+        <asp:HyperLink ID="HyperLink1" Text="Home" runat="server" NavigateUrl="~/MainPage.aspx" />
+        <asp:HyperLink ID="HyperLink2" Text="About" runat="server" NavigateUrl="~/AboutPage.aspx" />
+    </header>
+    <form id="form1" runat="server">
+    <div id="Center">
+    
+       <!-- display Songs or Playlists or All -->
+            <asp:SqlDataSource ID="selectionPlaylistDataSource" runat="server" ConnectionString="<%$ ConnectionStrings:ConnectionStringForMusicPlayer %>" SelectCommand="SELECT Playlist.PName AS [Playlist Name], playlistOptional.PlaylistArtwork AS [Playlist Artwork], playlistOptional.Description, playlistTags.[Content] AS Tags, playlistRating.Rating AS [Rating], Playlist.PID FROM Playlist LEFT OUTER JOIN playlistOptional ON Playlist.PID = playlistOptional.PID LEFT OUTER JOIN playlistRating ON Playlist.PID = playlistRating.PID LEFT OUTER JOIN playlistTags ON Playlist.PID = playlistTags.PID INNER JOIN [Users] ON Playlist.UID = [Users].UID WHERE ([Users].UID = @UID)">
+                <SelectParameters>
+        <asp:Parameter Name="UID" Type="Int32" />
+    </SelectParameters>
+            </asp:SqlDataSource>
+            <asp:GridView ID="gdvPlaylistSelection" runat="server" AutoGenerateColumns="False" DataSourceID="selectionPlaylistDataSource" DataKeyNames="PID, Playlist Name, Playlist Artwork, Rating, Description" OnRowCommand="gdvPlaylistSelection_RowCommand">
+                <Columns>
+                    <asp:ButtonField ButtonType="Button" Text="Edit" CommandName="ChoosePlaylist" HeaderText="Edit" />
+                    <asp:ButtonField ButtonType="Button" Text="Delete" CommandName="DeletePlaylist" HeaderText="Delete" />
+                    <asp:ImageField DataImageUrlField="Playlist Artwork" HeaderText="Playlist Artwork" ItemStyle-Width="50px"
+                        ControlStyle-Width="75" ControlStyle-Height = "75">
+                    </asp:ImageField>
+                    <asp:BoundField DataField="Playlist Name" HeaderText="Playlist Name" SortExpression="Playlist Name" />
+                    <asp:BoundField DataField="Playlist Artwork" HeaderText="Playlist Artwork" SortExpression="Playlist Artwork" Visible="False" />
+                    <asp:BoundField DataField="Description" HeaderText="Description" SortExpression="Description" />
+                    <asp:BoundField DataField="Rating" HeaderText="Rating" SortExpression="Rating" />
+                    <asp:BoundField DataField="Tags" HeaderText="Tags" SortExpression="Tags" Visible="false" />
+                    <asp:BoundField DataField="PID" HeaderText="PID" Visible="False" />
+                </Columns>
+            </asp:GridView>
+        <br />
+        <asp:Button ID="btnAddPlaylist" runat="server" Text="Add Playlist" OnClick="btnAddPlaylist_Click" />
+    </div>
+        
+    </form>
+</body>
+</html>
+
+c#
+
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+
+public partial class ViewPlaylists : System.Web.UI.Page
+{
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        Response.Cookies["loginInfo"]["UID"] = Request.Cookies["loginInfo"]["UID"];
+        Response.Cookies["loginInfo"]["isLoggedIn"] = Request.Cookies["loginInfo"]["isLoggedIn"];
+        Response.Cookies["loginInfo"]["username"] = Request.Cookies["loginInfo"]["username"];
+
+        selectionPlaylistDataSource.SelectParameters["UID"].DefaultValue = Request.Cookies["loginInfo"]["UID"];
+
+    }
+
+    protected void gdvPlaylistSelection_RowCommand(object sender, GridViewCommandEventArgs e)
+    {
+        if (e.CommandName == "ChoosePlaylist")
+        {
+            // Convert the row index stored in the CommandArgument (by default)
+            // property to an Integer.
+            int rowIndex = Convert.ToInt32(e.CommandArgument);
+            String PID = gdvPlaylistSelection.DataKeys[rowIndex]["PID"].ToString();
+            String playlistName = gdvPlaylistSelection.DataKeys[rowIndex]["Playlist Name"].ToString();
+            String playlistPicture = gdvPlaylistSelection.DataKeys[rowIndex]["Playlist Artwork"].ToString();
+            String rating = gdvPlaylistSelection.DataKeys[rowIndex]["Rating"].ToString();
+            String desc = gdvPlaylistSelection.DataKeys[rowIndex]["Description"].ToString();
+            // user has choosen this playlist to edit
+            Response.Cookies["playlistInfo"]["PID"] = PID;
+            Response.Cookies["playlistInfo"]["Pname"] = playlistName;
+            Response.Cookies["playlistInfo"]["playlistPicture"] = playlistPicture;
+            Response.Cookies["playlistInfo"]["rating"] = rating;
+            Response.Cookies["playlistInfo"]["description"] = desc;
+
+            Response.Redirect("~/EditPlaylistPage.aspx");
+            
+
+        }
+        else if(e.CommandName == "DeletePlaylist")
+        {
+            int rowIndex = Convert.ToInt32(e.CommandArgument);
+            String PID = gdvPlaylistSelection.DataKeys[rowIndex]["PID"].ToString();
+            SqlConnection connection = new SqlConnection(@"Data Source=(LocalDB)\v11.0;AttachDBFilename=|DataDirectory|\MusicStorDB.mdf;Integrated Security=True");
+            String sql = "DELETE FROM Playlist WHERE PID = @PID";
+            connection.Open();
+            SqlCommand cmd = new SqlCommand(sql, connection);
+            cmd.Parameters.Add("@PID", SqlDbType.Int);
+            cmd.Parameters["@PID"].Value = PID;
+
+            cmd.ExecuteNonQuery();
+            connection.Close();
+
+            sql = "DELETE FROM PlaylistOptional WHERE PID = @PID";
+            connection.Open();
+            SqlCommand cmdDeleteOp = new SqlCommand(sql, connection);
+            cmdDeleteOp.Parameters.Add("@PID", SqlDbType.Int);
+            cmdDeleteOp.Parameters["@PID"].Value = PID;
+
+            cmdDeleteOp.ExecuteNonQuery();
+            connection.Close();
+
+            gdvPlaylistSelection.DataBind();
+
+        }
+    }
+
+
+    protected void btnAddPlaylist_Click(object sender, EventArgs e)
+    {
+        String uid = Request.Cookies["loginInfo"]["UID"];
+        SqlConnection connection = new SqlConnection(@"Data Source=(LocalDB)\v11.0;AttachDBFilename=|DataDirectory|\MusicStorDB.mdf;Integrated Security=True");
+        String sql = "INSERT INTO Playlist (Content, Pname, UID) Values(NULL, DEFAULT, @UID)" +
+                        "INSERT INTO PlaylistOptional (PlaylistArtwork, Description) VALUES (NULL, NULL)" +
+                            "INSERT INTO PlaylistRating (Rating, UID) VALUES(DEFAULT, @UID)";
+
+        connection.Open();
+        SqlCommand cmd = new SqlCommand(sql, connection);
+        cmd.Parameters.Add("@UID", SqlDbType.Int);
+        cmd.Parameters["@UID"].Value = uid;
+
+        cmd.ExecuteNonQuery();
+        connection.Close();
+
+        gdvPlaylistSelection.DataBind();
+    }
+}
