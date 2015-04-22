@@ -1,0 +1,51 @@
+- c# (gridview is called gdvPlaylistSelection here)
+
+protected void gdvPlaylistSelection_RowCommand(object sender, GridViewCommandEventArgs e)
+    {
+        
+            // get the row whose button was pressed
+            int rowIndex = Convert.ToInt32(e.CommandArgument);
+
+            // get the PID of the Playlist
+            String PID = (string)gdvSongSelection.DataKeys[rowIndex]["PID"];
+
+            // delete all entries relying on PID from database
+            // create connection
+            SqlConnection myConnection = new SqlConnection();
+            // say where to connect to
+            myConnection.ConnectionString = "Data Source=(LocalDB)\\v11.0;AttachDbFilename=|DataDirectory|\\MusicStorDB.mdf;Integrated Security=True";
+            String deleteOrder = "DELETE FROM Playlist WHERE (PID = " + PID + ")";
+            deleteOrder += ";" + "DELETE FROM PlaylistComments WHERE (PID = " + PID + ")";
+            deleteOrder += ";" + "DELETE FROM PlaylistOptional WHERE (PID = " + PID + ")";
+            deleteOrder += ";" + "DELETE FROM PlaylistRating WHERE (PID = " + PID + ")";
+            deleteOrder += ";" + "DELETE FROM PlaylistTags WHERE (PID = " + PID + ")";
+            deleteOrder += ";" + "DELETE FROM reportedPlaylist WHERE (PID = " + PID + ")"; 
+
+            SqlCommand myCommand = new SqlCommand(deleteOrder, myConnection);
+            myCommand.Connection.Open();
+            // execute the delete Order
+            myCommand.ExecuteNonQuery();
+            // close and dispose of connection
+            myConnection.Close();
+            myConnection.Dispose();
+
+            // update Datasource and refresh gridview
+            selectionPlaylistDataSource.Update();
+            gdvPlaylistSelection.DataBind();
+    }
+    
+- html (the gridview in question)
+
+<asp:GridView ID="gdvPlaylistSelection" runat="server" AutoGenerateColumns="False" DataSourceID="selectionPlaylistDataSource" DataKeyNames="PID" OnRowCommand="gdvPlaylistSelection_RowCommand">
+                <Columns>
+                    <asp:ButtonField ButtonType="Button" Text="Delete" HeaderText="Delete" />
+                    <asp:ImageField DataImageUrlField="Playlist Artwork" HeaderText="Playlist Artwork">
+                    </asp:ImageField>
+                    <asp:BoundField DataField="Playlist Name" HeaderText="Playlist Name" SortExpression="Playlist Name" />
+                    <asp:BoundField DataField="Playlist Artwork" HeaderText="Playlist Artwork" SortExpression="Playlist Artwork" Visible="False" />
+                    <asp:BoundField DataField="Description" HeaderText="Description" SortExpression="Description" />
+                    <asp:BoundField DataField="Rating" HeaderText="Rating" SortExpression="Rating" />
+                    <asp:BoundField DataField="Tags" HeaderText="Tags" SortExpression="Tags" />
+                    <asp:BoundField DataField="PID" HeaderText="PID" Visible="False" />
+                </Columns>
+            </asp:GridView>
