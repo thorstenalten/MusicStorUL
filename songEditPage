@@ -58,16 +58,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -113,6 +103,7 @@ public partial class SongEditPage : System.Web.UI.Page
                 connection.Open();
                 //command.Parameters.Add("@UID", SqlDbType.Int);
                 //command.Parameters["@UID"].Value = UID;
+
                 SqlDataReader reader = selectCommand.ExecuteReader();
                 if (reader.HasRows)
                 {
@@ -176,14 +167,14 @@ public partial class SongEditPage : System.Web.UI.Page
         {
             try
             {
-                if (FileUploadControl.PostedFile.ContentType == "image/jpeg")
+                if (checkIsImage(FileUploadControl.FileName))
                 {
                     if (FileUploadControl.PostedFile.ContentLength < 24000000)
                     {
                         string filename = Path.GetFileName(FileUploadControl.FileName);
                         FileUploadControl.SaveAs(Server.MapPath("~/SongImages/") + filename);
                         StatusLabel.Text = "Upload status: File uploaded!";
-                        filePath =  Server.MapPath("~/SongImages/") + filename;
+                        filePath =  "/SongImages/"+ filename;
                     }
                     else
                     {
@@ -202,6 +193,24 @@ public partial class SongEditPage : System.Web.UI.Page
             }
         }
         return filePath;
+
+    }
+
+    public bool checkIsImage(string file)
+    {
+        string extension = Path.GetExtension(file);
+        extension = extension.ToLower();
+        switch (extension)
+        {
+            case ".jpg":
+                return true;
+            case ".jpeg":
+                return true;
+            case ".png":
+                return true;
+            default:
+                return false;
+        }
 
     }
 
