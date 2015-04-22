@@ -1,16 +1,139 @@
-- c#
+<%@ Page Language="C#" AutoEventWireup="true" CodeFile="EditPlaylistPage.aspx.cs" Inherits="EditPlaylistPage" %>
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>Edit Playlist</title>
+    <link href="StyleSheet.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <h1>MusicStorUL</h1>
+    <asp:Button ID="btnGoToLogin" runat="server" Text="Go To Login Page" Enabled="False" Visible="False" OnClick="btnGoToLogin_Click" />
+
+    <form id="mainPart" runat="server">
+    <div id="Center">
+    
+        
+       
+        <div id="selectionDisplay">
+            <asp:Label ID="lblInstruction" runat="server" Text="Click the add button to add a song to your playlist." />
+            <!-- display Songs or Playlists or All -->
+            <br />
+            <br />
+            <div>
+            <asp:SqlDataSource ID="selectionSongDataSource" runat="server" ConnectionString="<%$ ConnectionStrings:ConnectionStringForMusicPlayer %>" SelectCommand="SELECT Song.SName AS [Song Name], Song.SRC, songOptional.AlbumArtwork AS [Song Artwork], songOptional.Description, songTags.[Content] AS Tags, songRating.Rating, Song.SID FROM Song LEFT OUTER JOIN songOptional ON Song.SID = songOptional.SID LEFT OUTER JOIN songRating ON Song.SID = songRating.SID LEFT OUTER JOIN songTags ON Song.SID = songTags.SID INNER JOIN [Users] ON Song.UID = [Users].UID WHERE ([Users].UID = @UID)">
+                <SelectParameters>
+        <asp:Parameter Name="UID" Type="Int32" />
+    </SelectParameters>
+            </asp:SqlDataSource>
+            <asp:GridView ID="gdvSongSelection" runat="server" AutoGenerateColumns="False" DataSourceID="selectionSongDataSource" DataKeyNames="SID" OnRowCommand="addSongSelection_RowCommand" Width="600px" >
+                <Columns>
+                    <asp:ButtonField ButtonType="Button" CommandName="AddSong" HeaderText="Add" Text=" Add " />
+                    <asp:ImageField DataImageUrlField="SRC" HeaderText="Song Artwork">
+                    </asp:ImageField>
+                    <asp:BoundField DataField="Song Name" HeaderText="Song Name" SortExpression="Song Name" />
+                    <asp:BoundField DataField="SRC" HeaderText="SRC" SortExpression="SRC" Visible="false" />
+                    <asp:BoundField DataField="Song Artwork" HeaderText="Song Artwork" SortExpression="Song Artwork" Visible="false" />
+                    <asp:BoundField DataField="Description" HeaderText="Description" SortExpression="Description" />
+                    <asp:BoundField DataField="Rating" HeaderText="Rating" SortExpression="Rating" />
+                    <asp:BoundField DataField="Tags" HeaderText="Tags" SortExpression="Tags" Visible="false"/>
+                    <asp:BoundField DataField="SID" HeaderText="SID" ReadOnly="True" SortExpression="SID" Visible="false"/>
+                    <asp:BoundField DataField="PName" HeaderText="PName" SortExpression="PName" Visible="false" />
+                </Columns>
+            </asp:GridView>
+                </div>
+            <br />
+            <asp:Label ID="lblCurrentSongs" runat="server" Text="Songs currently in your playlist." />
+            <br />
+            <br />
+            <div>
+            <asp:SqlDataSource ID="allSongsInPlaylist" runat="server" ConnectionString="<%$ ConnectionStrings:ConnectionStringForMusicPlayer %>" SelectCommand="SELECT Song.SName AS [Song Name], Song.SRC, songOptional.AlbumArtwork AS [Song Artwork], songOptional.Description, songTags.[Content] AS Tags, songRating.Rating, Song.SID, Playlist.PName FROM Playlist INNER JOIN PlaylistContent ON Playlist.PID = PlaylistContent.PID INNER JOIN Song ON PlaylistContent.SID = Song.SID LEFT OUTER JOIN songOptional ON Song.SID = songOptional.SID LEFT OUTER JOIN songRating ON Song.SID = songRating.SID LEFT OUTER JOIN songTags ON Song.SID = songTags.SID INNER JOIN Users ON Song.UID = Users.UID WHERE (Playlist.PID = @PID)">
+                <SelectParameters>
+        <asp:Parameter Name="PID" Type="Int32" />
+    </SelectParameters>
+            </asp:SqlDataSource>
+            <asp:GridView ID="gdvCurrentSongs" runat="server" AutoGenerateColumns="False" DataSourceID="allSongsInPlaylist" DataKeyNames="SID" OnRowCommand="deleteSongSelection_RowCommand" Width="600px">
+                <Columns>
+                    <asp:ButtonField ButtonType="Button" CommandName="DeleteSong" HeaderText="Delete" Text="Delete" />
+                    <asp:ImageField DataImageUrlField="SRC" HeaderText="Song Artwork" >
+                    </asp:ImageField>
+                    <asp:BoundField DataField="Song Name" HeaderText="Song Name" SortExpression="Song Name" />
+                    <asp:BoundField DataField="SRC" HeaderText="SRC" SortExpression="SRC" Visible="false" />
+                    <asp:BoundField DataField="Song Artwork" HeaderText="Song Artwork" SortExpression="Song Artwork" Visible="false"/>
+                    <asp:BoundField DataField="Description" HeaderText="Description" SortExpression="Description" />
+                    <asp:BoundField DataField="Rating" HeaderText="Rating" SortExpression="Rating" />
+                    <asp:BoundField DataField="Tags" HeaderText="Tags" SortExpression="Tags" Visible="false" />
+                    <asp:BoundField DataField="SID" HeaderText="SID" ReadOnly="True" SortExpression="SID" Visible="false"/>
+                    <asp:BoundField DataField="PName" HeaderText="PName" SortExpression="PName" Visible="false" />
+                </Columns>
+            </asp:GridView>
+                </div>
+            <br />
+            <br />
+            <asp:Label ID="lblPlaylist" runat="server" Text="Playlist Name:" Width="200px"/>
+        <asp:TextBox ID="txtPlaylistName" runat="server" Width="200px"/>
+            <asp:RequiredFieldValidator ID="RequiredFieldValidator1" runat="server" ErrorMessage="Name must not be blank."
+                ControlToValidate="txtPlaylistName">
+            </asp:RequiredFieldValidator>
+            <br />
+            <br />
+            <asp:Label ID="lblImage" runat="server" Text="Add Playlist Image:" Width="200px"/>
+        <asp:FileUpload ID="FileUpload1" runat="server" Width="200px"/>
+            <br />
+            <br />
+            <asp:Label ID="lblDescription" runat="server" Text="Description:" Width="200px"/>
+        <asp:TextBox ID="txtDescription" runat="server" Width="200px" style="margin-bottom: 0px" TextMode="MultiLine"/>
+            
+            <br />
+            <br />
+            <asp:Label ID="lblRating" runat="server" Text="Rating:" Width ="200px" />
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <asp:RadioButtonList ID="rdbRating" runat="server" Enabled="true" RepeatDirection="Horizontal">
+                <asp:ListItem Text="1" Value="1" />
+                <asp:ListItem Text="2" Value="2" />
+                <asp:ListItem Text="3" Value="3" />
+                <asp:ListItem Text="4" Value="4" />
+                <asp:ListItem Text="5" Value="5" />
+            </asp:RadioButtonList>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <br />
+            <br />
+            <asp:Button ID="btnSave" runat="server" Text="Save" OnClick="btnSaveClick" />
+            
+        </div>
+
+        
+
+        <aside>
+            <div id="SideBar">
+            <!-- Sidebar for displaying whatever -->
+             
+            </div>
+        </aside>
+
+    </div>
+    </form>
+</body>
+</html>
+
+
+c#
 
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
+using System.IO;
 using System.Linq;
 using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 
- // we were sent here by either
-    // Server.Transfer("EditPlaylistPage.aspx?profileOf=currentUser&intend=createNew", true); --> go to create new playlist section directly
-    // Server.Transfer("EditPlaylistPage.aspx?profileOf=currentUser&intend=edit", true); --> go to edit section unspecific of any playlist 
-    // Server.Transfer("EditPlaylistPage.aspx?profileOf=currentUser&intend=edit&playlistID=PID", true); --> go to edit PID section
+// we were sent here by either
+// Server.Transfer("EditPlaylistPage.aspx?profileOf=currentUser&intend=createNew", true); --> go to create new playlist section directly
+// Server.Transfer("EditPlaylistPage.aspx?profileOf=currentUser&intend=edit", true); --> go to edit section unspecific of any playlist 
+// Server.Transfer("EditPlaylistPage.aspx?profileOf=currentUser&intend=edit&playlistID=PID", true); --> go to edit PID section
 
 public partial class EditPlaylistPage : System.Web.UI.Page
 {
@@ -18,15 +141,28 @@ public partial class EditPlaylistPage : System.Web.UI.Page
     {
         // cookies for testing
         Response.Cookies["loginInfo"]["isLoggedIn"] = "true";
-        Response.Cookies["loginInfo"]["username"] = "admin"; 
+        Response.Cookies["loginInfo"]["username"] = "admin";
+        Response.Cookies["loginInfo"]["UID"] = Request.Cookies["loginInfo"]["UID"];
+        Response.Write(Request.Cookies["loginInfo"]["username"]);
 
+        allSongsInPlaylist.SelectParameters["PID"].DefaultValue = Request.Cookies["playlistInfo"]["PID"];
+        selectionSongDataSource.SelectParameters["UID"].DefaultValue = Request.Cookies["loginInfo"]["UID"];
+        Response.Write(Request.Cookies["loginInfo"]["UID"]);
         if (loggedIn()) // only show the page if user is logged in
         {
             if (!IsCallback) // first time the page is loaded do ..
             {
                 if (isOwnPage()) // if the user is looking at the own page 
                 {
-                    Response.Write("Welcome User on your own Edit Playlist Page");
+                    if (!IsPostBack)
+                    {
+                        if (!Request.Cookies["playlistInfo"]["Pname"].Equals(""))
+                        {
+                            txtPlaylistName.Text = Request.Cookies["playlistInfo"]["Pname"];
+                            rdbRating.SelectedValue = Request.Cookies["playlistInfo"]["rating"];
+                            txtDescription.Text = Request.Cookies["playlistInfo"]["description"];
+                        }
+                    }
                 }
                 else // if user is looking at another's Edit Playlist Page (not allowed)
                 {
@@ -47,8 +183,8 @@ public partial class EditPlaylistPage : System.Web.UI.Page
             mainPart.Attributes.Add("Disabled", ""); // adds the Attribute 'Disabled' to the div thus disabling everything it contains as well .. which is everything bedise footer header
             // to undo this use mainPart.Attributes.Remove("Disabled"); // this removes the Attribute by setting it to no value at all (not even empty)
             // show button that directs to loginPage
-            btnGoToLogin.Enabled = true;
-            btnGoToLogin.Visible = true;
+            //btnGoToLogin.Enabled = true;
+            //btnGoToLogin.Visible = true;
         }
     }
 
@@ -68,7 +204,7 @@ public partial class EditPlaylistPage : System.Web.UI.Page
     private bool isOwnPage() // check if current user is on own page (i.e. whether requested user page includes same name as current user)
     {
         // we will have been sent here by something like: Server.Transfer("MainPage.aspx?profileOf=username", true);
-        String Owner = Request.QueryString["profileOf"];
+        /*String Owner = Request.QueryString["profileOf"];
 
         if (Owner == null) // for testing because I may not have gotten here by Server.Transfer
             Owner = "admin"; // for testing
@@ -81,7 +217,8 @@ public partial class EditPlaylistPage : System.Web.UI.Page
             if (Owner.Equals(currentUser))
                 return true;
         }
-        return false;
+         * */
+        return true;
     }
 
     private bool isBlacklisted() // TODO // check if current user is on blacklist of the ProfilePage's user
@@ -89,37 +226,12 @@ public partial class EditPlaylistPage : System.Web.UI.Page
         return false;
     }
 
-    protected void btnSongs_Click(object sender, EventArgs e)
-    {
-        // show only gdvSongSelection, disable + hide gdvPlaylistSelection
-        gdvSongSelection.Enabled = true;
-        gdvSongSelection.Visible = true;
-        gdvPlaylistSelection.Enabled = false;
-        gdvPlaylistSelection.Visible = false;
-        
-    }
-    protected void btnPlaylists_Click(object sender, EventArgs e)
-    {
-        // show only gdvPlaylistSelection, disable + hide gdvSongSelection
-        gdvPlaylistSelection.Enabled = true;
-        gdvPlaylistSelection.Visible = true;
-        gdvSongSelection.Enabled = false;
-        gdvSongSelection.Visible = false;
-    }
-    protected void btnAll_Click(object sender, EventArgs e)
-    {
-        // show both gdvSongSelection, gdvPlaylistSelection
-        gdvSongSelection.Enabled = true;
-        gdvSongSelection.Visible = true;
-        gdvPlaylistSelection.Enabled = true;
-        gdvPlaylistSelection.Visible = true;
-    }
     protected void btnGoToLogin_Click(object sender, EventArgs e)
     {
         Response.Redirect("LoginPage.aspx", true); // user tried to access the page while logged out, so redirect them to login page
     }
 
-    protected void gdvSongSelection_RowCommand(Object sender, GridViewCommandEventArgs e)
+    protected void addSongSelection_RowCommand(Object sender, GridViewCommandEventArgs e)
     {
         if (e.CommandName == "AddSong")
         {
@@ -128,95 +240,146 @@ public partial class EditPlaylistPage : System.Web.UI.Page
             int rowIndex = Convert.ToInt32(e.CommandArgument);
 
             // get the SID value of the row (it's a hidden column, we use a DataKey to access it)
-            String SID = gdvSongSelection.DataKeys[rowIndex]["SID"].ToString();
-            
+            int SID = Convert.ToInt32(gdvSongSelection.DataKeys[rowIndex]["SID"].ToString());
+            int PID = Convert.ToInt32(Request.Cookies["playlistInfo"]["PID"]);
+            SqlConnection connection = new SqlConnection(@"Data Source=(LocalDB)\v11.0;AttachDBFilename=|DataDirectory|\MusicStorDB.mdf;Integrated Security=True");
+            String sqlUpdate = "INSERT INTO PlaylistContent VALUES(@PID, @SID)";
+            try
+            {
+                connection.Open();
+
+                SqlCommand cmd = new SqlCommand(sqlUpdate, connection);
+                cmd.Parameters.Add("@PID", SqlDbType.Int);
+                cmd.Parameters["@PID"].Value = PID;
+
+                cmd.Parameters.Add("@SID", SqlDbType.Int);
+                cmd.Parameters["@SID"].Value = SID;
+
+                cmd.ExecuteNonQuery();
+                connection.Close();
+            }
+            catch
+            {
+                Response.Write("Playlist already contains this song.");
+            }
+
+            gdvSongSelection.DataBind();
+            gdvCurrentSongs.DataBind();
             // add to currently choosen playlist .. somehow. Do your best!
-        }  
-        
+        }
+
     }
 
-    protected void gdvPlaylistSelection_RowCommand(object sender, GridViewCommandEventArgs e)
+    protected void btnSaveClick(Object sender, EventArgs e)
     {
-        if (e.CommandName == "ChoosePlaylist")
+        int PID = Convert.ToInt32(Request.Cookies["playlistInfo"]["PID"]);
+        String pName = Request.Cookies["playlistInfo"]["Pname"];
+        String fileName = Path.GetFileName(FileUpload1.PostedFile.FileName);
+        String description;
+        String playlistPicture;
+        String sql = "UPDATE playlistOptional SET PlaylistArtwork = @playlistPicture, Description = @description WHERE PID = @PID";
+        String sqlPlaylistName = "UPDATE Playlist SET Pname = @PName WHERE PID = @PID";
+        SqlConnection connection = new SqlConnection(@"Data Source=(LocalDB)\v11.0;AttachDBFilename=|DataDirectory|\MusicStorDB.mdf;Integrated Security=True");
+
+        if (!fileName.Equals(""))
         {
-            // Convert the row index stored in the CommandArgument (by default)
-            // property to an Integer.
-            int rowIndex = Convert.ToInt32(e.CommandArgument);
-            String PID = gdvPlaylistSelection.DataKeys[rowIndex]["PID"].ToString();
-           
-            // user has choosen this playlist to edit
+            //Save playlist picture to /PlaylistImages
+            FileUpload1.SaveAs(Server.MapPath("/PlaylistImages/" + fileName));
+            playlistPicture = "/PlaylistImages/" + fileName;
         }
+
+        //if user does not choose to change picture keep filePath the same
+        else
+        {
+            playlistPicture = Request.Cookies["playlistInfo"]["playlistPicture"];
+        }
+
+        if (!string.IsNullOrWhiteSpace(txtDescription.Text))
+        {
+            description = txtDescription.Text;
+        }
+        else
+            description = "";
+
+        if(!txtPlaylistName.Text.Equals(Request.Cookies["playlistInfo"]["Pname"]))
+        {
+           
+        }
+        /* What to do when i get back
+         * Edit playlist image size in gridview
+         * set it to only update playlist name if the txtPlaylistName has been changed
+         * insert into all relevent tables the pid when playlist is created
+         */
+        connection.Open();
+        SqlCommand cmd = new SqlCommand(sql, connection);
+
+        cmd.Parameters.Add("@playlistPicture", SqlDbType.VarChar);
+        cmd.Parameters["@playlistPicture"].Value = playlistPicture;
+
+        cmd.Parameters.Add("@description", SqlDbType.VarChar);
+        cmd.Parameters["@description"].Value = description;
+
+        cmd.Parameters.Add("@PID", SqlDbType.Int);
+        cmd.Parameters["@PID"].Value = PID;
+
+        cmd.ExecuteNonQuery();
+        connection.Close();
+
+        if (!txtPlaylistName.Text.Equals(pName))
+        {
+            pName = txtPlaylistName.Text;
+            connection.Open();
+            SqlCommand cmdName = new SqlCommand(sqlPlaylistName, connection);
+            cmdName.Parameters.Add("@PName", SqlDbType.VarChar);
+            cmdName.Parameters["@PName"].Value = pName;
+
+            cmdName.Parameters.Add("@PID", SqlDbType.Int);
+            cmdName.Parameters["@PID"].Value = PID;
+
+            cmdName.ExecuteNonQuery();
+            connection.Close();
+
+        }
+
+        String sqlRating = "UPDATE playlistRating SET Rating = @rating WHERE PID = @PID";
+        connection.Open();
+        SqlCommand cmdRating = new SqlCommand(sqlRating, connection);
+        cmdRating.Parameters.Add("@rating", SqlDbType.Int);
+        cmdRating.Parameters["@rating"].Value = rdbRating.SelectedValue;
+
+        cmdRating.Parameters.Add("@PID", SqlDbType.Int);
+        cmdRating.Parameters["@PID"].Value = PID;
+        cmdRating.ExecuteNonQuery();
+        connection.Close();
+
+        Response.Redirect("~/ViewPlaylists.aspx");
+
+    }
+
+    protected void deleteSongSelection_RowCommand(Object sender, GridViewCommandEventArgs e)
+    {
+        // Convert the row index stored in the CommandArgument (by default)
+        // property to an Integer.
+        int rowIndex = Convert.ToInt32(e.CommandArgument);
+
+        int SID = Convert.ToInt32(gdvSongSelection.DataKeys[rowIndex]["SID"].ToString());
+        int PID = Convert.ToInt32(Request.Cookies["playlistInfo"]["PID"]);
+        SqlConnection connection = new SqlConnection(@"Data Source=(LocalDB)\v11.0;AttachDBFilename=|DataDirectory|\MusicStorDB.mdf;Integrated Security=True");
+        String sqlDelete = "DELETE FROM PlaylistContent WHERE PID = @PID AND SID = @SID";
+
+        connection.Open();
+
+        SqlCommand cmd = new SqlCommand(sqlDelete, connection);
+        cmd.Parameters.Add("@PID", SqlDbType.Int);
+        cmd.Parameters["@PID"].Value = PID;
+
+        cmd.Parameters.Add("@SID", SqlDbType.Int);
+        cmd.Parameters["@SID"].Value = SID;
+
+        cmd.ExecuteNonQuery();
+        connection.Close();
+
+        gdvCurrentSongs.DataBind();
     }
 
 }
-
-- html
-
-<%@ Page Language="C#" AutoEventWireup="true" CodeFile="EditPlaylistPage.aspx.cs" Inherits="EditPlaylistPage" %>
-
-<!DOCTYPE html>
-
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head runat="server">
-    <title></title>
-</head>
-<body>
-
-    <asp:Button ID="btnGoToLogin" runat="server" Text="Go To Login Page" Enabled="False" Visible="False" OnClick="btnGoToLogin_Click" />
-
-    <form id="mainPart" runat="server">
-    <div>
-    
-        <div id="selection">
-            <!-- Songs or Playlists or All -->
-            <asp:Button ID="btnSongs" runat="server" Text="Songs" OnClick="btnSongs_Click" />
-            <asp:Button ID="btnPlaylists" runat="server" Text="Playlists" OnClick="btnPlaylists_Click" />
-            <asp:Button ID="btnAll" runat="server" Text="All" OnClick="btnAll_Click" />
-        </div>
-
-        <div id="selectionDisplay">
-            <!-- display Songs or Playlists or All -->
-            <asp:SqlDataSource ID="selectionSongDataSource" runat="server" ConnectionString="<%$ ConnectionStrings:ConnectionStringForMusicPlayer %>" SelectCommand="SELECT Song.SName AS [Song Name], Song.SRC, songOptional.AlbumArtwork AS [Song Artwork], songOptional.Description, songTags.[Content] AS Tags, songRating.Rating, Song.SID FROM Song LEFT OUTER JOIN songOptional ON Song.SID = songOptional.SID LEFT OUTER JOIN songRating ON Song.SID = songRating.SID LEFT OUTER JOIN songTags ON Song.SID = songTags.SID INNER JOIN [User] ON Song.UID = [User].UID WHERE ([User].UID = 14006138)"></asp:SqlDataSource>
-            <asp:SqlDataSource ID="selectionPlaylistDataSource" runat="server" ConnectionString="<%$ ConnectionStrings:ConnectionStringForMusicPlayer %>" SelectCommand="SELECT Playlist.PName AS [Playlist Name], playlistOptional.PlaylistArtwork AS [Playlist Artwork], playlistOptional.Description, playlistTags.[Content] AS Tags, playlistRating.Rating, Playlist.PID FROM Playlist LEFT OUTER JOIN playlistOptional ON Playlist.PID = playlistOptional.PID LEFT OUTER JOIN playlistRating ON Playlist.PID = playlistRating.PID LEFT OUTER JOIN playlistTags ON Playlist.PID = playlistTags.PID INNER JOIN [User] ON Playlist.UID = [User].UID WHERE ([User].UID = 14006138)"></asp:SqlDataSource>
-            <asp:GridView ID="gdvSongSelection" runat="server" AutoGenerateColumns="False" DataSourceID="selectionSongDataSource" DataKeyNames="SRC,SID" OnRowCommand="gdvSongSelection_RowCommand">
-                <Columns>
-                    <asp:ButtonField ButtonType="Button" CommandName="AddSong" HeaderText="Add" Text="Add" />
-                    <asp:ImageField DataImageUrlField="SRC" HeaderText="Song Artwork">
-                    </asp:ImageField>
-                    <asp:BoundField DataField="Song Name" HeaderText="Song Name" SortExpression="Song Name" />
-                    <asp:BoundField DataField="SRC" HeaderText="SRC" SortExpression="SRC" Visible="False" />
-                    <asp:BoundField DataField="Song Artwork" HeaderText="Song Artwork" SortExpression="Song Artwork" Visible="False" />
-                    <asp:BoundField DataField="Description" HeaderText="Description" SortExpression="Description" />
-                    <asp:BoundField DataField="Rating" HeaderText="Rating" SortExpression="Rating" />
-                    <asp:BoundField DataField="Tags" HeaderText="Tags" SortExpression="Tags" />
-                    <asp:BoundField DataField="SID" HeaderText="SID" Visible="False" />
-                </Columns>
-            </asp:GridView>
-            <asp:GridView ID="gdvPlaylistSelection" runat="server" AutoGenerateColumns="False" DataSourceID="selectionPlaylistDataSource" DataKeyNames="PID" OnRowCommand="gdvPlaylistSelection_RowCommand">
-                <Columns>
-                    <asp:ButtonField ButtonType="Button" Text="Edit" CommandName="ChoosePlaylist" HeaderText="Edit" />
-                    <asp:ImageField DataImageUrlField="Playlist Artwork" HeaderText="Playlist Artwork">
-                    </asp:ImageField>
-                    <asp:BoundField DataField="Playlist Name" HeaderText="Playlist Name" SortExpression="Playlist Name" />
-                    <asp:BoundField DataField="Playlist Artwork" HeaderText="Playlist Artwork" SortExpression="Playlist Artwork" Visible="False" />
-                    <asp:BoundField DataField="Description" HeaderText="Description" SortExpression="Description" />
-                    <asp:BoundField DataField="Rating" HeaderText="Rating" SortExpression="Rating" />
-                    <asp:BoundField DataField="Tags" HeaderText="Tags" SortExpression="Tags" />
-                    <asp:BoundField DataField="PID" HeaderText="PID" Visible="False" />
-                </Columns>
-            </asp:GridView>
-        </div>
-
-        
-
-        <aside>
-            <div id="SideBar">
-            <!-- Sidebar for displaying whatever -->
-             
-            </div>
-        </aside>
-
-    </div>
-    </form>
-</body>
-</html>
