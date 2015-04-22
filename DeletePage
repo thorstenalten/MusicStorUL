@@ -1,0 +1,264 @@
+- html
+
+<%@ Page Language="C#" AutoEventWireup="true" CodeFile="DeletePage.aspx.cs" Inherits="DeletePage" %>
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title></title>
+</head>
+<body>
+
+    <asp:Button ID="btnGoToLogin" runat="server" Text="Go To Login Page" Enabled="False" Visible="False" OnClick="btnGoToLogin_Click" />
+
+    <form id="mainPart" runat="server">
+    <div>
+    
+        <div id="selection">
+            <!-- Songs or Playlists or All -->
+            <asp:Button ID="btnSongs" runat="server" Text="Songs" OnClick="btnSongs_Click" />
+            <asp:Button ID="btnPlaylists" runat="server" Text="Playlists" OnClick="btnPlaylists_Click" />
+            <asp:Button ID="btnAll" runat="server" Text="All" OnClick="btnAll_Click" />
+        </div>
+
+        <div id="selectionDisplay">
+            <!-- display Songs or Playlists or All -->
+            <asp:SqlDataSource ID="selectionSongDataSource" runat="server" ConnectionString="<%$ ConnectionStrings:ConnectionStringForMusicPlayer %>" SelectCommand="SELECT Song.SName AS [Song Name], Song.SRC, songOptional.AlbumArtwork AS [Song Artwork], songOptional.Description, songTags.[Content] AS Tags, songRating.Rating, Song.SID FROM Song LEFT OUTER JOIN songOptional ON Song.SID = songOptional.SID LEFT OUTER JOIN songRating ON Song.SID = songRating.SID LEFT OUTER JOIN songTags ON Song.SID = songTags.SID INNER JOIN [User] ON Song.UID = [User].UID WHERE ([User].UID = 14006138)" ></asp:SqlDataSource>
+            <asp:SqlDataSource ID="selectionPlaylistDataSource" runat="server" ConnectionString="<%$ ConnectionStrings:ConnectionStringForMusicPlayer %>" SelectCommand="SELECT Playlist.PName AS [Playlist Name], playlistOptional.PlaylistArtwork AS [Playlist Artwork], playlistOptional.Description, playlistTags.[Content] AS Tags, playlistRating.Rating, Playlist.PID FROM Playlist LEFT OUTER JOIN playlistOptional ON Playlist.PID = playlistOptional.PID LEFT OUTER JOIN playlistRating ON Playlist.PID = playlistRating.PID LEFT OUTER JOIN playlistTags ON Playlist.PID = playlistTags.PID INNER JOIN [User] ON Playlist.UID = [User].UID WHERE ([User].UID = 14006138)"></asp:SqlDataSource>
+            <asp:GridView ID="gdvSongSelection" runat="server" AutoGenerateColumns="False" DataSourceID="selectionSongDataSource" DataKeyNames="SRC,SID" OnRowCommand="gdvSongSelection_RowCommand">
+                <Columns>
+                    <asp:ButtonField ButtonType="Button" CommandName="DeleteSong" HeaderText="Delete" Text="Delete" />
+                    <asp:ImageField DataImageUrlField="SRC" HeaderText="Song Artwork">
+                    </asp:ImageField>
+                    <asp:BoundField DataField="Song Name" HeaderText="Song Name" SortExpression="Song Name" />
+                    <asp:BoundField DataField="SRC" HeaderText="SRC" SortExpression="SRC" Visible="False" />
+                    <asp:BoundField DataField="Song Artwork" HeaderText="Song Artwork" SortExpression="Song Artwork" Visible="False" />
+                    <asp:BoundField DataField="Description" HeaderText="Description" SortExpression="Description" />
+                    <asp:BoundField DataField="Rating" HeaderText="Rating" SortExpression="Rating" />
+                    <asp:BoundField DataField="Tags" HeaderText="Tags" SortExpression="Tags" />
+                    <asp:BoundField DataField="SID" HeaderText="SID" Visible="False" />
+                </Columns>
+            </asp:GridView>
+            <asp:GridView ID="gdvPlaylistSelection" runat="server" AutoGenerateColumns="False" DataSourceID="selectionPlaylistDataSource" DataKeyNames="PID" OnRowCommand="gdvPlaylistSelection_RowCommand">
+                <Columns>
+                    <asp:ButtonField ButtonType="Button" Text="Delete" CommandName="DeletePlaylist" HeaderText="Delete" />
+                    <asp:ImageField DataImageUrlField="Playlist Artwork" HeaderText="Playlist Artwork">
+                    </asp:ImageField>
+                    <asp:BoundField DataField="Playlist Name" HeaderText="Playlist Name" SortExpression="Playlist Name" />
+                    <asp:BoundField DataField="Playlist Artwork" HeaderText="Playlist Artwork" SortExpression="Playlist Artwork" Visible="False" />
+                    <asp:BoundField DataField="Description" HeaderText="Description" SortExpression="Description" />
+                    <asp:BoundField DataField="Rating" HeaderText="Rating" SortExpression="Rating" />
+                    <asp:BoundField DataField="Tags" HeaderText="Tags" SortExpression="Tags" />
+                    <asp:BoundField DataField="PID" HeaderText="PID" Visible="False" />
+                </Columns>
+            </asp:GridView>
+        </div>
+
+        
+
+        <aside>
+            <div id="SideBar">
+            <!-- Sidebar for displaying whatever -->
+                <asp:Label ID="lblTest" runat="server" Text="TestLabel"></asp:Label>
+            </div>
+        </aside>
+
+    </div>
+    </form>
+</body>
+</html>
+
+- c#
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data;
+using System.Data.SqlClient;
+
+public partial class DeletePage : System.Web.UI.Page
+{
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        // cookies for testing
+        Response.Cookies["loginInfo"]["isLoggedIn"] = "true";
+        Response.Cookies["loginInfo"]["username"] = "admin";
+
+        if (loggedIn()) // only show the page if user is logged in
+        {
+            if (!IsCallback) // first time the page is loaded do ..
+            {
+                if (isOwnPage()) // if the user is looking at the own page 
+                {
+                    Response.Write("Welcome User on your own Download Page");
+                }
+                else // if user is looking at another's page 
+                {
+                    Response.Write("You do not have access to this site, scherr dich");
+                    mainPart.Attributes.Add("Disabled", ""); // disable everything
+                }
+            }
+            else // any additional time the page is loaded do ..
+            {
+                // TODO not sure if we need to do anything here
+            }
+        }
+        else // if not logged in
+        {
+            Response.Write("You do not have access to this site, please log in");
+            // disable everything
+            mainPart.Attributes.Add("Disabled", ""); // adds the Attribute 'Disabled' to the div thus disabling everything it contains as well .. which is everything bedise footer header
+            // to undo this use mainPart.Attributes.Remove("Disabled"); // this removes the Attribute by setting it to no value at all (not even empty)
+            // show button that directs to loginPage
+            btnGoToLogin.Enabled = true;
+            btnGoToLogin.Visible = true;
+        }
+    }
+
+    private bool loggedIn() // check if user is logged in  (using cookie that was created upon login at loginPage)
+    {
+        if (Request.Cookies["loginInfo"] != null)
+        {
+            String loggedIn = Request.Cookies["loginInfo"]["isLoggedIn"];
+            loggedIn.ToLower();
+
+            if (loggedIn.Equals("true"))
+                return true;
+        }
+        return false;
+    }
+
+    private bool isOwnPage() // check if current user is on own page (i.e. whether requested user page includes same name as current user)
+    {
+        // we will have been sent here by something like: Server.Transfer("MainPage.aspx?profileOf=username", true);
+        String Owner = Request.QueryString["profileOf"];
+
+        if (Owner == null) // for testing because I may not have gotten here by Server.Transfer
+            Owner = "admin"; // for testing
+
+        //query the login cookie for current user's name
+        if (Request.Cookies["loginInfo"] != null)
+        {
+            String currentUser = Request.Cookies["loginInfo"]["username"];
+
+            if (Owner.Equals(currentUser))
+                return true;
+        }
+        return false;
+    }
+
+    private bool isBlacklisted() // TODO // check if current user is on blacklist of the ProfilePage's user
+    {
+        return false;
+    }
+
+    protected void btnSongs_Click(object sender, EventArgs e)
+    {
+        // show only gdvSongSelection, disable + hide gdvPlaylistSelection
+        gdvSongSelection.Enabled = true;
+        gdvSongSelection.Visible = true;
+        gdvPlaylistSelection.Enabled = false;
+        gdvPlaylistSelection.Visible = false;
+
+    }
+    protected void btnPlaylists_Click(object sender, EventArgs e)
+    {
+        // show only gdvPlaylistSelection, disable + hide gdvSongSelection
+        gdvPlaylistSelection.Enabled = true;
+        gdvPlaylistSelection.Visible = true;
+        gdvSongSelection.Enabled = false;
+        gdvSongSelection.Visible = false;
+    }
+    protected void btnAll_Click(object sender, EventArgs e)
+    {
+        // show both gdvSongSelection, gdvPlaylistSelection
+        gdvSongSelection.Enabled = true;
+        gdvSongSelection.Visible = true;
+        gdvPlaylistSelection.Enabled = true;
+        gdvPlaylistSelection.Visible = true;
+    }
+    protected void btnGoToLogin_Click(object sender, EventArgs e)
+    {
+        Response.Redirect("LoginPage.aspx", true); // user tried to access the page while logged out, so redirect them to login page
+    }
+
+    protected void gdvSongSelection_RowCommand(Object sender, GridViewCommandEventArgs e)
+    {
+        if (e.CommandName == "DeleteSong")
+        {
+            // get the row whose button was pressed
+            int rowIndex = Convert.ToInt32(e.CommandArgument);
+
+            // get the SID of the Song
+            String SID = gdvSongSelection.DataKeys[rowIndex]["SID"].ToString();
+            Response.Write("SID " + SID + " ");
+            
+            // delete all entries relying on SID from database
+            // create connection
+            SqlConnection myConnection = new SqlConnection();
+            // say where to connect to
+            myConnection.ConnectionString = "Data Source=(LocalDB)\\v11.0;AttachDbFilename=|DataDirectory|\\MusicStorDB.mdf;Integrated Security=True";
+            String deleteOrder = "DELETE FROM Song WHERE (SID = " + SID + ")";
+            deleteOrder += ";" + "DELETE FROM SongComments WHERE (SID = " + SID + ")";
+            deleteOrder += ";" + "DELETE FROM SongOptional WHERE (SID = " + SID + ")";
+            deleteOrder += ";" + "DELETE FROM SongRating WHERE (SID = " + SID + ")";
+            deleteOrder += ";" + "DELETE FROM SongTags WHERE (SID = " + SID + ")";
+            deleteOrder += ";" + "DELETE FROM reportedSongs WHERE (SID = " + SID + ")"; // not sure about this last one
+            
+            SqlCommand myCommand = new SqlCommand(deleteOrder, myConnection);
+            myCommand.Connection.Open();
+            // execute the delete Order
+            myCommand.ExecuteNonQuery();
+            // close and dispose of connection
+            myConnection.Close();
+            myConnection.Dispose();
+
+            // UpdateCommand="SELECT Song.SName AS [Song Name], Song.SRC, songOptional.AlbumArtwork AS [Song Artwork], songOptional.Description, songTags.[Content] AS Tags, songRating.Rating, Song.SID FROM Song LEFT OUTER JOIN songOptional ON Song.SID = songOptional.SID LEFT OUTER JOIN songRating ON Song.SID = songRating.SID LEFT OUTER JOIN songTags ON Song.SID = songTags.SID INNER JOIN [User] ON Song.UID = [User].UID WHERE ([User].UID = 14006138)"
+            selectionSongDataSource.UpdateCommand = "SELECT Song.SName AS [Song Name], Song.SRC, songOptional.AlbumArtwork AS [Song Artwork], songOptional.Description, songTags.[Content] AS Tags, songRating.Rating, Song.SID FROM Song LEFT OUTER JOIN songOptional ON Song.SID = songOptional.SID LEFT OUTER JOIN songRating ON Song.SID = songRating.SID LEFT OUTER JOIN songTags ON Song.SID = songTags.SID INNER JOIN [User] ON Song.UID = [User].UID WHERE ([User].UID = 14006138)";
+            selectionSongDataSource.Update();
+            gdvSongSelection.DataBind();
+
+        }
+
+    }
+
+    protected void gdvPlaylistSelection_RowCommand(object sender, GridViewCommandEventArgs e)
+    {
+        if (e.CommandName == "DeletePlaylist")
+        {
+            // get the row whose button was pressed
+            int rowIndex = Convert.ToInt32(e.CommandArgument);
+
+            // get the PID of the Playlist
+            String PID = (string)gdvSongSelection.DataKeys[rowIndex]["PID"];
+
+            // delete all entries relying on PID from database
+            // create connection
+            SqlConnection myConnection = new SqlConnection();
+            // say where to connect to
+            myConnection.ConnectionString = "Data Source=(LocalDB)\\v11.0;AttachDbFilename=|DataDirectory|\\MusicStorDB.mdf;Integrated Security=True";
+            String deleteOrder = "DELETE FROM Playlist WHERE (PID = " + PID + ")";
+            deleteOrder += ";" + "DELETE FROM PlaylistComments WHERE (PID = " + PID + ")";
+            deleteOrder += ";" + "DELETE FROM PlaylistOptional WHERE (PID = " + PID + ")";
+            deleteOrder += ";" + "DELETE FROM PlaylistRating WHERE (PID = " + PID + ")";
+            deleteOrder += ";" + "DELETE FROM PlaylistTags WHERE (PID = " + PID + ")";
+            deleteOrder += ";" + "DELETE FROM reportedPlaylist WHERE (PID = " + PID + ")"; 
+
+            SqlCommand myCommand = new SqlCommand(deleteOrder, myConnection);
+            myCommand.Connection.Open();
+            // execute the delete Order
+            myCommand.ExecuteNonQuery();
+            // close and dispose of connection
+            myConnection.Close();
+            myConnection.Dispose();
+
+            selectionPlaylistDataSource.Update();
+            gdvPlaylistSelection.DataBind();
+        }
+    }
+
+}
