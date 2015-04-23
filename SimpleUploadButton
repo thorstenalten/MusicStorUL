@@ -1,0 +1,80 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.IO;
+using System.Data;
+using System.Data.SqlClient;
+using System.Configuration;
+using System.Text.RegularExpressions;
+
+public partial class Default2 : System.Web.UI.Page
+{
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        foreach (string s in Request.Files)
+        {
+            HttpPostedFile file = Request.Files[s];
+
+            int fileSizeInBytes = file.ContentLength;
+            string fileName = Request.Headers["X-File-Name"];
+            string fileExtension = "";
+
+            if (checkIsMusic(fileName))
+            {
+                if (!string.IsNullOrEmpty(fileName))
+                    fileExtension = Path.GetExtension(fileName);
+                    string savedFileName = Path.Combine(@"C:\Music\", fileExtension);
+                try
+                {
+                    //Update the SQL tables
+                    SqlConnection connection = new SqlConnection();
+                    connection.ConnectionString = @"Data Source=(LocalDB)\v11.0;AttachDbFilename=|DataDirectory|\Database.mdf;Integrated Security=True";
+                    SqlCommand command = new SqlCommand("Select MAX(SID) from Song", connection);
+
+                    SqlDataReader myReader = null;
+                    myReader = command.ExecuteReader();
+                    int maxSID = 0;
+                    while (myReader.Read())
+                    {
+                        maxSID = myReader.GetInt32(0);
+                    }
+
+                    SqlParameter paramSID = new SqlParameter("@SID", SqlDbType.Int);
+                    paramSID.Value = maxSID + 1;
+                    SqlParameter paramSRC = new SqlParameter("@SRC", SqlDbType.Text);
+                    paramSRC.Value = savedFileName;
+
+                    SqlCommand insert = new SqlCommand("INSERT INTO SONG (SID,SRC) VALUES (@SID,@SRC)", connection);
+                    insert.Parameters.Add(paramSID);
+                    insert.Parameters.Add(paramSRC);
+                    insert.ExecuteNonQuery();
+                    connection.Close();
+                }
+                catch
+                {
+                    Response.Write("Database Error");
+                }
+
+            }
+            else
+                Response.Write("Not music");
+        }
+    }
+    public bool checkIsMusic(string file)
+    {
+        string extension = Path.GetExtension(file);
+        extension = extension.ToLower();
+        switch (extension)
+        {
+            case ".mp3":
+                Response.Write("File accepted");
+                return true;
+            default:
+                return false;
+        }
+
+    }
+}
