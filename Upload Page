@@ -5,8 +5,6 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head runat="server">
     <title></title>
-    <script src="https://rawgit.com/enyo/dropzone/master/dist/dropzone.js"></script>
-    <link rel="stylesheet" href="https://rawgit.com/enyo/dropzone/master/dist/dropzone.css">
 </head>
 <body>
     <form id="form1" runat="server" >
@@ -22,7 +20,6 @@
     </form>
 </body>
 </html>
-
 
 using System;
 using System.Collections.Generic;
@@ -46,10 +43,10 @@ public partial class UploadPage : System.Web.UI.Page
     {
         int i = 0;
         String fileName = FileUpload1.FileName;
-        string cmd = "Select * from SONG where SRC = /MusicFiles/" + fileName;
+        string cmd = "Select * from SONG where SRC = '/MusicFiles/" + fileName + "'";
         SqlConnection connection = new SqlConnection(@"Data Source=(LocalDB)\v11.0;AttachDBFilename=|DataDirectory|\MusicStorDB.mdf;Integrated Security=True");
         SqlCommand selectCommand = new SqlCommand(cmd, connection);
-        SqlCommand insertCommand = new SqlCommand("INSERT INTO song VALUES(@SID, @SRC, @Sname, @UID)", connection);
+        SqlCommand insertCommand = new SqlCommand("INSERT INTO song (SRC,SNAME,UID) VALUES(@SRC, @Sname, @UID)", connection);
         SqlCommand command = new SqlCommand("SELECT MAX(SID) as MAX FROM SONG", connection);
 
         try
@@ -57,12 +54,8 @@ public partial class UploadPage : System.Web.UI.Page
             int sid = 0;
             bool existsAlready = false;
             connection.Open();
-            SqlDataReader reader = command.ExecuteReader();
-            if (reader.HasRows)
-                 sid = reader.GetInt32(reader.GetOrdinal("MAX"));
-            reader.Close();
-            sid++;
-            reader = selectCommand.ExecuteReader();
+
+            SqlDataReader reader = selectCommand.ExecuteReader();
             if (reader.HasRows)
             {
                 existsAlready = true;
@@ -70,28 +63,26 @@ public partial class UploadPage : System.Web.UI.Page
             reader.Close();
 
             //If there exists a song with the same name it will put your UID at the end to differenciate
-            if (existsAlready && !sameSize("/MusicFiles/" + fileName ))
-            {
-                //fileName = Path.GetFileNameWithoutExtension(fileName) + "-" + Request.Cookies["loginInfo"]["username"] + Path.GetExtension(fileName);
+            if (existsAlready && !sameSize(Server.MapPath("~/MusicFiles/" + fileName )))
+            {   
+
+                fileName = Path.GetFileNameWithoutExtension(fileName) + "-" + Request.Cookies["loginInfo"]["username"] + Path.GetExtension(fileName);
             }
 
-            insertCommand.Parameters.Add("@SID", SqlDbType.VarChar).Value = sid;
-            insertCommand.Parameters.Add("@SRC", SqlDbType.VarChar).Value = fileName;
+            insertCommand.Parameters.Add("@SRC", SqlDbType.VarChar).Value = "/MusicFiles/" + fileName;
 
             if(!String.IsNullOrWhiteSpace(txtSname.Text))
-                insertCommand.Parameters.Add("@Sname", SqlDbType.VarChar).Value = sid;
+                insertCommand.Parameters.Add("@Sname", SqlDbType.VarChar).Value = txtSname.Text;
             else
-                insertCommand.Parameters.Add("@Sname", SqlDbType.VarChar).Value = DBNull.Value;
+                insertCommand.Parameters.Add("@Sname", SqlDbType.VarChar).Value = fileName;
 
-            insertCommand.Parameters.Add("@UID", SqlDbType.VarChar).Value = 13136224; // =Request.Cookies["loginInfo"]["username"] 
+            insertCommand.Parameters.Add("@UID", SqlDbType.VarChar).Value = Request.Cookies["loginInfo"]["username"] 
 
-
-
-
+            insertCommand.ExecuteNonQuery();
 
             if (FileUpload1.HasFile && checkIsMusic(System.IO.Path.GetExtension(FileUpload1.FileName)))
             {
-                FileUpload1.SaveAs(Server.MapPath("/MusicFiles/" + FileUpload1.FileName));
+                FileUpload1.SaveAs(Server.MapPath("~/MusicFiles/" + FileUpload1.FileName));
                 lblAccept.Text = "File uploaded!";
             }
             else
