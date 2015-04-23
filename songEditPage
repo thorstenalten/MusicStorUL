@@ -12,19 +12,19 @@
 
             <asp:label id="lblSelectSong" runat="server" text="Select song:  " font-bold="True" width="170px" font-size="Medium"></asp:label>
             &nbsp;
-        <asp:dropdownlist id="DropDownList1" runat="server">
+        <asp:dropdownlist id="DropDownList1" runat="server" EnableViewState="true" OnSelectedIndexChanged= "populateTextBoxes" AutoPostBack="true" >
             <asp:ListItem Text="--Select Song--" Value="">
             </asp:ListItem>
         </asp:dropdownlist>
-            &nbsp;<asp:Label ID="selectedSong" runat="server" Text=""></asp:Label>
-            <br />
+            &nbsp;<br />
             <br />
 
             <asp:label id="lblAimg" runat="server" text="Album Artwork: " font-bold="True" width="170px" font-size="Medium"></asp:label>
             &nbsp;    
         
     
-        <asp:fileupload id="FileUploadControl" runat="server" />
+        <asp:fileupload id="FileUploadControl" runat="server" EnableViewState="true"/>
+            <asp:CheckBox ID="CheckBox1" runat="server" Text="Delete old file?"  Checked ="false" />
             <br />
             <br />
             <asp:label id="StatusLabel" runat="server" text="Upload status: " />
@@ -34,7 +34,7 @@
 
             <asp:label id="lblGenre" runat="server" text="Genre: " font-bold="True" width="170px" font-size="Medium"></asp:label>
             &nbsp;
-            <asp:textbox id="txtGenre" runat="server" width="170px"></asp:textbox>
+            <asp:textbox id="txtGenre" runat="server" width="170px" EnableViewState="true"></asp:textbox>
 
             <br />
 
@@ -43,17 +43,36 @@
 
             <asp:label id="lblDescription" runat="server" text="Description" font-bold="True" width="170px" font-size="Medium"></asp:label>
             &nbsp;
-            <asp:textbox id="txtDescription" runat="server" width="170px"></asp:textbox>
+            <asp:textbox id="txtDescription" runat="server" width="170px" EnableViewState="true"></asp:textbox>
             &nbsp;<br />
+            <asp:Label ID="Label1" runat="server" Text="Select Rating:  "></asp:Label>
+            <asp:RadioButtonList ID="rdbRating" runat="server" Enabled="true" RepeatDirection="Horizontal">
+                <asp:ListItem Text="1" Value="1" />
+                <asp:ListItem Text="2" Value="2" />
+                <asp:ListItem Text="3" Value="3" />
+                <asp:ListItem Text="4" Value="4" />
+                <asp:ListItem Text="5" Value="5" />
+                <asp:ListItem Text="Give no rating?" Value="0" Selected="True" enabled ="false" ></asp:ListItem>
+            </asp:RadioButtonList>
             <br />
             <br />
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        <asp:button id="btnRegister" runat="server" font-bold="True" text="Register" onclick="btnRegister_Click" />
+        <asp:button id="btnRegister" runat="server" font-bold="True" text="Save" onclick="btnRegister_Click" />
+        <asp:button id="Button1" runat="server" font-bold="True" text="Back" onclick="btnBack_Click" />
+            
             <br />
         </div>
+        <p>
+            <asp:Label ID="selectedSong" runat="server" Text=""></asp:Label>
+            </p>
     </form>
 </body>
 </html>
+
+
+
+
+
 
 
 
@@ -89,7 +108,7 @@ public partial class SongEditPage : System.Web.UI.Page
         bool hasData = false;
         if (IsValid)
         {
-            SqlConnection connection = new SqlConnection(@"Data Source=(LocalDB)\v11.0;AttachDBFilename=|DataDirectory|\MusicStorDB.mdf;Integrated Security=True");
+            SqlConnection connection = new SqlConnection(@"Data Source=(LocalDB)\v11.0;AttachDBFilename=|DataDirectory|\MusicStorDB.mdf;Integrated Security=True;");
             SqlCommand insertCommand = new SqlCommand("INSERT INTO songOptional VALUES(@SID, @AlbumArtwork, @Genre, @Description)", connection);
             SqlCommand selectCommand = new SqlCommand("SELECT SID FROM songOptional where SID = " + Convert.ToInt32(DropDownList1.SelectedItem.Value), connection);
             SqlCommand updateCommand = new SqlCommand("UPDATE songOptional SET AlbumArtwork = @AlbumArtwork, Genre = @Genre, Description = @Description WHERE SID = " + DropDownList1.SelectedItem.Value, connection);
@@ -114,7 +133,7 @@ public partial class SongEditPage : System.Web.UI.Page
                 {
                     if (!string.IsNullOrWhiteSpace(imgSrc))
                         updateCommand.Parameters.Add("@AlbumArtwork", SqlDbType.VarChar).Value = imgSrc;
-                    else
+                    else if (CheckBox1.Checked == true)
                        updateCommand.Parameters.Add("@AlbumArtwork", SqlDbType.VarChar).Value = DBNull.Value;
 
                     if (!string.IsNullOrWhiteSpace(genre))
@@ -150,7 +169,55 @@ public partial class SongEditPage : System.Web.UI.Page
 
                     insertCommand.ExecuteNonQuery();
                 }
-                connection.Close();                
+                
+
+                String sqlRating = "UPDATE songRating SET Rating = @rating WHERE SID = " + DropDownList1.SelectedItem.Value;
+                String sqlHasRating = "Select * from songRating where SID = " + DropDownList1.SelectedItem.Value;
+                String sqlInsert = "INSERT INTO songRating VALUES(@SID, @Rating, @UID)";
+
+
+                SqlCommand cmdHasRating = new SqlCommand(sqlHasRating, connection);
+                SqlDataReader breader = cmdHasRating.ExecuteReader();
+                bool hasRating = false;
+                if (breader.HasRows)
+                {
+                    hasRating = true;
+                }
+                breader.Close();
+
+                if (hasRating)
+                {
+                    SqlCommand cmdRating = new SqlCommand(sqlRating, connection);
+                    cmdRating.Parameters.Add("@rating", SqlDbType.Int);
+                    cmdRating.Parameters["@rating"].Value = Convert.ToInt32(rdbRating.SelectedValue);
+
+                    cmdRating.Parameters.Add("@UID", SqlDbType.Int);
+                    cmdRating.Parameters["@UID"].Value = 13136224;//Request.Cookies["loginInfo"]["username"];
+                    cmdRating.ExecuteNonQuery();
+                }
+                else
+                {
+                    SqlCommand insertRating = new SqlCommand(sqlInsert, connection);
+
+                    insertRating.Parameters.Add("@SID", SqlDbType.Int);
+                    insertRating.Parameters["@SID"].Value = DropDownList1.SelectedItem.Value;
+
+                    insertRating.Parameters.Add("@rating", SqlDbType.Int);
+                    insertRating.Parameters["@rating"].Value = rdbRating.SelectedValue;
+
+
+                    insertRating.Parameters.Add("@UID", SqlDbType.Int);
+                    insertRating.Parameters["@UID"].Value = 13136224; //Request.Cookies["loginInfo"]["username"];
+                    insertRating.ExecuteNonQuery();
+                }
+                
+
+
+
+
+                connection.Close();
+
+                selectedSong.Text = "Success!";
             }
             catch(SqlException sqlEx)
             {
@@ -162,7 +229,7 @@ public partial class SongEditPage : System.Web.UI.Page
 
     protected string getFilePath()
     {
-        string filePath = null;
+        string filePath = "";
         if (FileUploadControl.HasFile)
         {
             try
@@ -171,7 +238,7 @@ public partial class SongEditPage : System.Web.UI.Page
                 {
                     if (FileUploadControl.PostedFile.ContentLength < 24000000)
                     {
-                        string filename = Path.GetFileName(FileUploadControl.FileName);
+                        string filename = FileUploadControl.FileName;
                         FileUploadControl.SaveAs(Server.MapPath("~/SongImages/") + filename);
                         StatusLabel.Text = "Upload status: File uploaded!";
                         filePath =  "/SongImages/"+ filename;
@@ -216,7 +283,7 @@ public partial class SongEditPage : System.Web.UI.Page
 
     protected void makeDDL()
     {
-        string cmdString = "SELECT SID,SName FROM Song where UID = 13136224"; //where UID = " + Request.Cookies["loginInfo"]["username"];
+        string cmdString = "SELECT SID,SName FROM Song where UID = 13136224"; // + Request.Cookies["loginInfo"]["username"];
         SqlCommand cmd = new SqlCommand(cmdString, new SqlConnection(@"Data Source=(LocalDB)\v11.0;AttachDBFilename=|DataDirectory|\MusicStorDB.mdf;Integrated Security=True"));
         cmd.Connection.Open();
         SqlDataReader ddlValues;
@@ -227,6 +294,39 @@ public partial class SongEditPage : System.Web.UI.Page
         DropDownList1.DataBind();
         cmd.Connection.Close();
         DropDownList1.Items.Insert(0, new ListItem("--Select Song--", ""));
+    }
+
+    protected void populateTextBoxes(object sender, EventArgs e)
+    {
+        SqlConnection connection = new SqlConnection(@"Data Source=(LocalDB)\v11.0;AttachDBFilename=|DataDirectory|\MusicStorDB.mdf;Integrated Security=True");
+        SqlCommand selectCommand = new SqlCommand("SELECT AlbumArtwork,Genre,Description FROM songOptional where SID = " + Convert.ToInt32(DropDownList1.SelectedItem.Value), connection);
+
+        try
+        {
+            connection.Open();
+            SqlDataReader reader = selectCommand.ExecuteReader();
+            while (reader.Read())
+            {
+                if (reader.GetValue(1) == DBNull.Value)
+                    txtGenre.Text = "";
+                else
+                    txtGenre.Text = reader.GetString(1);
+                if (reader.GetValue(2) == DBNull.Value)
+                    txtDescription.Text = "";
+                else
+                    txtDescription.Text = reader.GetString(2);
+            }
+            connection.Close();
+        }
+        catch (SqlException sql)
+        {
+            Response.Write(sql);
+        }
+        
+    }
+    protected void btnBack_Click(object sender, EventArgs e)
+    {
+        Response.Redirect("SongInfoPage.aspx");
     }
 
 }
