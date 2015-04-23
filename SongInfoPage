@@ -1,0 +1,158 @@
+<%@ Page Language="C#" AutoEventWireup="true" CodeFile="SongInfoPage.aspx.cs" Inherits="SongInfoPage" %>
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>Registration Page</title>
+</head>
+<body style="height: 200px">
+    <form id="form1" runat="server">
+        <div>
+
+            <asp:label id="lblSelectSong" runat="server" text="Select song:  " font-bold="True" width="170px" font-size="Medium"></asp:label>
+            &nbsp;
+        <asp:dropdownlist id="DropDownList1" runat="server" EnableViewState="true" OnSelectedIndexChanged= "populateTextBoxes" AutoPostBack="true" >
+            <asp:ListItem Text="--Select Song--" Value="">
+            </asp:ListItem>
+        </asp:dropdownlist>
+            &nbsp;<br />
+            <br />
+
+            <asp:label id="lblAimg" runat="server" text="Album Artwork: " font-bold="True" width="170px" font-size="Medium"></asp:label>
+            &nbsp;    
+        
+    
+            <asp:Image ID="Image1" runat="server" Width="228px" />
+            <br />
+            <br />
+            <asp:label id="StatusLabel" runat="server" text="Upload status: " />
+
+
+            <br />
+
+            <asp:label id="lblGenre" runat="server" text="Genre: " font-bold="True" width="170px" font-size="Medium"></asp:label>
+            &nbsp;
+            <asp:textbox id="txtGenre" runat="server" width="170px" EnableViewState="true"></asp:textbox>
+
+            <br />
+
+            <br />
+            <br />
+
+            <asp:label id="lblDescription" runat="server" text="Description" font-bold="True" width="170px" font-size="Medium"></asp:label>
+            &nbsp;
+            <asp:textbox id="txtDescription" runat="server" width="170px" EnableViewState="true"></asp:textbox>
+            &nbsp;<br />
+            <asp:Label ID="Label1" runat="server" Text="Select Rating:  "></asp:Label>
+            <asp:RadioButtonList ID="rdbRating" runat="server" Enabled="true" RepeatDirection="Horizontal">
+                <asp:ListItem Text="1" Value="1" />
+                <asp:ListItem Text="2" Value="2" />
+                <asp:ListItem Text="3" Value="3" />
+                <asp:ListItem Text="4" Value="4" />
+                <asp:ListItem Text="5" Value="5" />
+            </asp:RadioButtonList>
+            <br />
+            <br />
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <asp:button id="btnRegister" runat="server" font-bold="True" text="Edit" onclick="btnRegister_Click" />
+            <br />
+        </div>
+        <p>
+            <asp:Label ID="selectedSong" runat="server" Text=""></asp:Label>
+            </p>
+    </form>
+</body>
+</html>
+
+
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data;
+using System.Data.SqlClient;
+using System.Configuration;
+using System.IO;
+using System.Text.RegularExpressions;
+
+public partial class SongInfoPage : System.Web.UI.Page
+{
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        if (!IsPostBack)
+        {
+            makeDDL();
+        }
+    }
+
+    protected void makeDDL()
+    {
+        string cmdString = "SELECT SID,SName FROM Song where UID = " + Request.Cookies["loginInfo"]["username"];
+        SqlCommand cmd = new SqlCommand(cmdString, new SqlConnection(@"Data Source=(LocalDB)\v11.0;AttachDBFilename=|DataDirectory|\MusicStorDB.mdf;Integrated Security=True"));
+        cmd.Connection.Open();
+        SqlDataReader ddlValues;
+        ddlValues = cmd.ExecuteReader();
+        DropDownList1.DataSource = ddlValues;
+        DropDownList1.DataValueField = "SID";
+        DropDownList1.DataTextField = "SName";
+        DropDownList1.DataBind();
+        cmd.Connection.Close();
+        DropDownList1.Items.Insert(0, new ListItem("--Select Song--", ""));
+    }
+
+    protected void populateTextBoxes(object sender, EventArgs e)
+    {
+        SqlConnection connection = new SqlConnection(@"Data Source=(LocalDB)\v11.0;AttachDBFilename=|DataDirectory|\MusicStorDB.mdf;Integrated Security=True");
+        SqlCommand selectCommand = new SqlCommand("SELECT AlbumArtwork,Genre,Description FROM songOptional where SID = " + Convert.ToInt32(DropDownList1.SelectedItem.Value), connection);
+        SqlCommand selectRating = new SqlCommand("SELECT Rating from songRating  where SID = " + Convert.ToInt32(DropDownList1.SelectedItem.Value), connection);
+
+
+        try
+        {
+            connection.Open();
+            SqlDataReader reader = selectCommand.ExecuteReader();
+            while (reader.Read())
+            {
+                if (reader.IsDBNull(0))
+                    Image1.ImageUrl = "/SongImages/default.jpeg";
+                else
+                    Image1.ImageUrl = reader.GetString(0);
+
+                if (reader.IsDBNull(1))
+                    txtGenre.Text = "";
+                else
+                    txtGenre.Text = reader.GetString(1);
+                if (reader.IsDBNull(2))
+                    txtDescription.Text = "";
+                else
+                    txtDescription.Text = reader.GetString(2);
+            }
+            reader.Close();
+            reader = selectRating.ExecuteReader();
+            while (reader.Read())
+            {
+                if (reader.GetInt32(0) > 0)
+                {
+                  if (!reader.IsDBNull(0))
+                    rdbRating.Items.FindByValue(reader.GetInt32(0).ToString()).Selected = true;
+                 }
+                else;
+            }
+            connection.Close();
+        }
+        catch (SqlException sql)
+        {
+            Response.Write(sql);
+        }
+
+    }
+
+    protected void btnRegister_Click(object sender, EventArgs e)
+    {
+        Response.Redirect("SongEditPage.aspx");
+    }
+}
