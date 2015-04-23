@@ -192,7 +192,7 @@ public partial class SongEditPage : System.Web.UI.Page
                     cmdRating.Parameters["@rating"].Value = Convert.ToInt32(rdbRating.SelectedValue);
 
                     cmdRating.Parameters.Add("@UID", SqlDbType.Int);
-                    cmdRating.Parameters["@UID"].Value = 13136224;//Request.Cookies["loginInfo"]["username"];
+                    cmdRating.Parameters["@UID"].Value = Request.Cookies["loginInfo"]["username"];
                     cmdRating.ExecuteNonQuery();
                 }
                 else
@@ -207,7 +207,7 @@ public partial class SongEditPage : System.Web.UI.Page
 
 
                     insertRating.Parameters.Add("@UID", SqlDbType.Int);
-                    insertRating.Parameters["@UID"].Value = 13136224; //Request.Cookies["loginInfo"]["username"];
+                    insertRating.Parameters["@UID"].Value = Request.Cookies["loginInfo"]["username"];
                     insertRating.ExecuteNonQuery();
                 }
                 
@@ -283,7 +283,7 @@ public partial class SongEditPage : System.Web.UI.Page
 
     protected void makeDDL()
     {
-        string cmdString = "SELECT SID,SName FROM Song where UID = 13136224"; // + Request.Cookies["loginInfo"]["username"];
+        string cmdString = "SELECT SID,SName FROM Song where UID = " + Request.Cookies["loginInfo"]["username"];
         SqlCommand cmd = new SqlCommand(cmdString, new SqlConnection(@"Data Source=(LocalDB)\v11.0;AttachDBFilename=|DataDirectory|\MusicStorDB.mdf;Integrated Security=True"));
         cmd.Connection.Open();
         SqlDataReader ddlValues;
